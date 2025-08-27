@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, PlusCircle } from "lucide-react";
+import { Loader2, PlusCircle, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createUser } from "@/lib/data";
 
@@ -75,17 +75,35 @@ export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogP
   async function onSubmit(values: z.infer<typeof userSchema>) {
     setIsLoading(true);
     try {
-      await createUser({
+      const newUser = await createUser({
         name: values.name,
         email: values.email,
         role: values.role,
         mobile: `${values.countryCode} ${values.mobile}`,
         avatar: `https://picsum.photos/seed/${values.name}/100/100`, // random avatar
       });
+
+      const invitationLink = `${window.location.origin}/invite/${newUser.invitationToken}`;
+      
       toast({
-        title: "User Created!",
-        description: `Successfully added ${values.name} to the user list.`,
+        title: "User Created & Invitation Link Generated!",
+        description: (
+          <div className="space-y-2">
+            <p>Share this link with {newUser.name} to set up their account.</p>
+            <div className="flex items-center gap-2">
+              <Input readOnly value={invitationLink} className="text-xs" />
+              <Button size="icon" variant="outline" onClick={() => {
+                navigator.clipboard.writeText(invitationLink);
+                toast({ title: "Link Copied!" });
+              }}>
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ),
+        duration: 20000, // Keep toast open longer
       });
+
       onUserAdded();
       handleOpenChange(false);
     } catch (error) {

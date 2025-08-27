@@ -20,6 +20,8 @@ export type User = {
   mobile: string;
   role: 'Employee' | 'Admin' | 'Super Admin';
   avatar: string;
+  status: 'Pending' | 'Active';
+  invitationToken?: string;
 };
 
 export type FormResponse = {
@@ -44,7 +46,7 @@ export async function seedInitialData() {
             email: 'admin@formflow.com',
             mobile: '+1 123-456-7890',
             role: 'Super Admin',
-            avatar: 'https://picsum.photos/seed/admin/100/100'
+            avatar: 'https://picsum.photos/seed/admin/100/100',
         });
         console.log("Default super admin created.");
     }
@@ -89,9 +91,20 @@ export async function updateForm(id: string, formData: Partial<Omit<Form, 'id'>>
 
 
 // User functions
-export async function createUser(userData: Omit<User, 'id'>) {
-    const docRef = await addDoc(usersCollection, userData);
-    return docRef.id;
+export async function createUser(userData: Omit<User, 'id' | 'status' | 'invitationToken'>): Promise<User> {
+    const invitationToken = Math.random().toString(36).substring(2);
+    const docRef = await addDoc(usersCollection, {
+        ...userData,
+        status: 'Pending',
+        invitationToken,
+    });
+
+    return {
+        id: docRef.id,
+        ...userData,
+        status: 'Pending',
+        invitationToken
+    }
 }
 
 export async function getUsers(): Promise<User[]> {
