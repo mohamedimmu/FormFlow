@@ -20,6 +20,7 @@ const menuItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/form-builder", label: "Form Builder", icon: ListChecks },
   { href: "/forms", label: "Responses", icon: BarChart3 },
+  { href: "/users", label: "Users", icon: Users },
 ]
 
 export function SidebarNav() {
