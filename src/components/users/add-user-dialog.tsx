@@ -40,7 +40,7 @@ const userSchema = z.object({
   countryCode: z.string(),
   mobile: z.string().min(5, { message: "Please enter a valid mobile number." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
-  role: z.enum(['Employee', 'Admin', 'Super Admin'], {
+  role: z.enum(['Employee', 'Admin'], {
     required_error: "You need to select a user type.",
   }),
 });
@@ -56,7 +56,7 @@ export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogP
   const { toast } = useToast();
   const { userProfile, createUser, sendInvitation } = useAuth();
 
-  const isSuperAdmin = userProfile?.role?.toLowerCase() === 'super admin';
+  const canInvite = userProfile?.role?.toLowerCase() === 'super admin' || userProfile?.role?.toLowerCase() === 'admin';
 
   const form = useForm<z.infer<typeof userSchema>>({
     resolver: zodResolver(userSchema),
@@ -76,8 +76,8 @@ export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogP
   };
 
   async function onSubmit(values: z.infer<typeof userSchema>) {
-    if(!isSuperAdmin) {
-        toast({ variant: "destructive", title: "Permission Denied", description: "Only Super Admins can create new users." });
+    if(!canInvite) {
+        toast({ variant: "destructive", title: "Permission Denied", description: "You do not have permission to create new users." });
         return;
     }
 
@@ -197,13 +197,15 @@ export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogP
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Choose Admin Type" />
+                        <SelectValue placeholder="Choose User Type" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="Employee">Employee</SelectItem>
                       <SelectItem value="Admin">Admin</SelectItem>
-                      <SelectItem value="Super Admin">Super Admin</SelectItem>
+                      {userProfile?.role?.toLowerCase() === 'super admin' && (
+                        <SelectItem value="Super Admin">Super Admin</SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -211,7 +213,7 @@ export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogP
               )}
             />
             <DialogFooter>
-              <Button type="submit" disabled={isLoading || !isSuperAdmin} className="w-full">
+              <Button type="submit" disabled={isLoading || !canInvite} className="w-full">
                 {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
