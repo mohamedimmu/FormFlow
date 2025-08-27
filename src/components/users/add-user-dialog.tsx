@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -9,7 +10,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -27,9 +27,18 @@ import { Loader2, PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createUser } from "@/lib/data";
 
+const countries = [
+    { code: "+1", name: "USA" },
+    { code: "+44", name: "UK" },
+    { code: "+91", name: "India" },
+    { code: "+61", name: "Australia" },
+    { code: "+81", name: "Japan" },
+];
+
 const userSchema = z.object({
   name: z.string().min(2, { message: "User name must be at least 2 characters." }),
-  mobile: z.string().regex(/^\d{3}-\d{3}-\d{4}$/, { message: "Please enter a valid mobile number (e.g., 123-456-7890)." }),
+  countryCode: z.string(),
+  mobile: z.string().min(5, { message: "Please enter a valid mobile number." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
   role: z.enum(['Employee', 'Admin', 'Super Admin'], {
     required_error: "You need to select a user type.",
@@ -50,6 +59,7 @@ export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogP
     resolver: zodResolver(userSchema),
     defaultValues: {
       name: "",
+      countryCode: "+1",
       mobile: "",
       email: "",
     },
@@ -66,7 +76,10 @@ export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogP
     setIsLoading(true);
     try {
       await createUser({
-        ...values,
+        name: values.name,
+        email: values.email,
+        role: values.role,
+        mobile: `${values.countryCode} ${values.mobile}`,
         avatar: `https://picsum.photos/seed/${values.name}/100/100`, // random avatar
       });
       toast({
@@ -108,19 +121,41 @@ export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogP
                 </FormItem>
               )}
             />
-             <FormField
-              control={form.control}
-              name="mobile"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Mobile Number</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter Mobile Number" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+             <FormItem>
+                <FormLabel>Mobile Number</FormLabel>
+                <div className="flex gap-2">
+                    <FormField
+                        control={form.control}
+                        name="countryCode"
+                        render={({ field }) => (
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                    <SelectTrigger className="w-[120px]">
+                                        <SelectValue placeholder="Code" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {countries.map(country => (
+                                        <SelectItem key={country.code} value={country.code}>{country.name} ({country.code})</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="mobile"
+                        render={({ field }) => (
+                            <FormControl>
+                                <Input placeholder="Enter Mobile Number" {...field} />
+                            </FormControl>
+                        )}
+                    />
+                </div>
+                 <FormMessage>
+                    {form.formState.errors.mobile?.message}
+                </FormMessage>
+             </FormItem>
             <FormField
               control={form.control}
               name="email"
