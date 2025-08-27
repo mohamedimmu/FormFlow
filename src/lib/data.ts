@@ -1,4 +1,5 @@
-import { collection, addDoc, getDocs, getDoc, doc, updateDoc, query, orderBy, limit, writeBatch, where, documentId } from "firebase/firestore";
+
+import { collection, addDoc, getDocs, getDoc, doc, updateDoc, query, orderBy, limit, writeBatch, where, documentId, setDoc } from "firebase/firestore";
 import type { Question } from "@/components/forms/form-builder";
 import { db, auth } from "./firebase";
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
@@ -39,13 +40,44 @@ const responsesCollection = collection(db, "responses");
 
 // Seeding function for initial data
 export async function seedInitialData() {
-    // This function will be more complex now with auth
-    // For now, we assume a user is created via the UI.
-    // In a real app, you might have a script to create the first admin user.
-}
+    const usersSnapshot = await getDocs(query(usersCollection, limit(1)));
+    if (usersSnapshot.empty) {
+        console.log("No users found. Seeding Super Admin...");
+        try {
+            // This is the default super admin.
+            const superAdminData = {
+                name: 'Super Admin',
+                email: 'admin@formflow.com',
+                role: 'Super Admin' as const,
+                mobile: '+1 1234567890',
+                avatar: 'https://picsum.photos/seed/SuperAdmin/100/100',
+            };
+            const defaultPassword = '12345678';
 
-// Call seeding function on startup
-// seedInitialData(); // We will handle this manually for now.
+            // Create user in Firebase Auth
+            const userCredential = await createUserWithEmailAndPassword(auth, superAdminData.email, defaultPassword);
+            const authUid = userCredential.user.uid;
+
+            // Create user profile in Firestore
+            await setDoc(doc(db, "users", authUid), {
+                id: authUid,
+                ...superAdminData,
+                status: 'Active',
+            });
+
+            console.log("Super Admin created successfully.");
+
+        } catch (error: any) {
+            if (error.code === 'auth/email-already-in-use') {
+                console.log("Super admin user already exists in Auth.");
+            } else {
+                console.error("Error seeding Super Admin:", error);
+            }
+        }
+    } else {
+        console.log("Users collection is not empty. Skipping seeding.");
+    }
+}
 
 
 // Form functions
@@ -89,25 +121,26 @@ export async function createUser(userData: Omit<User, 'id' | 'status'>, password
     // You'd typically use a Cloud Function triggered by the document creation
     // to create the Auth user, to avoid having password creation logic on the client.
     // For this prototype, we'll do it on the client for simplicity.
-    const authUser = await createUserWithEmailAndPassword(auth, userData.email, password_dont_use);
+    const userCredential = await createUserWithEmailAndPassword(auth, userData.email, password_dont_use);
+    const authUid = userCredential.user.uid;
 
-    const newUser: User = {
-        id: authUser.user.uid,
+    const newUser: Omit<User, 'id'> = {
         ...userData,
-        status: 'Active', // Or 'Pending' if you have an email verification flow
+        status: 'Pending',
     };
     
     // We use the UID from Auth as the document ID in Firestore for a 1:1 mapping.
-    await updateDoc(doc(usersCollection, authUser.user.uid), { ...newUser });
+    await setDoc(doc(usersCollection, authUid), newUser);
 
-    return newUser;
+    return { ...newUser, id: authUid };
 }
 
 export async function getUserProfile(uid: string): Promise<User | null> {
     const docRef = doc(db, "users", uid);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-        return docSnap.data() as User;
+        const data = docSnap.data();
+        return { id: docSnap.id, ...data } as User;
     }
     return null;
 }
@@ -118,8 +151,11 @@ export async function getUsers(): Promise<User[]> {
 }
 
 export async function sendInvitation(email: string) {
-    // This simulates sending an invitation. In a real app, this would trigger an email.
-    await sendPasswordResetEmail(auth, email);
+    const actionCodeSettings = {
+        url: `${window.location.origin}/invite/set-password`, // Generic URL, token handled by Firebase
+        handleCodeInApp: true,
+    };
+    await sendPasswordResetEmail(auth, email, actionCodeSettings);
     console.log(`Password reset/invitation email sent to ${email}. Check your inbox or console for the link.`);
 }
 
@@ -148,4 +184,9 @@ export async function createResponse(formId: string, answers: { [key: string]: a
     }
 
     return docRef.id;
+}
+
+// Call this from a client component that runs once, like the AuthProvider
+if (typeof window !== 'undefined') {
+    // seedInitialData();
 }

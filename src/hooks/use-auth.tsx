@@ -5,7 +5,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode, useCa
 import { onAuthStateChanged, User as FirebaseUser, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, confirmPasswordReset } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { User as AppUser, getUserProfile } from '@/lib/data';
+import { User as AppUser, getUserProfile, seedInitialData } from '@/lib/data';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -25,6 +25,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Seed data on initial load
+    seedInitialData();
+    
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setLoading(true);
       if (firebaseUser) {
@@ -54,7 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const sendPasswordReset = async (email: string) => {
     const actionCodeSettings = {
-        url: `${window.location.origin}/invite/reset-password`,
+        url: `${window.location.origin}/invite/set-password`,
     };
     await sendPasswordResetEmail(auth, email, actionCodeSettings);
   };
