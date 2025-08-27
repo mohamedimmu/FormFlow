@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   Sidebar,
   SidebarHeader,
@@ -15,6 +15,7 @@ import {
 import { Logo } from "@/components/icons"
 import { Button } from "@/components/ui/button"
 import { LayoutDashboard, FileText, Users, LogOut, BarChart3, ListChecks } from "lucide-react"
+import { useAuth } from "@/hooks/use-auth"
 
 const menuItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -24,7 +25,14 @@ const menuItems = [
 ]
 
 export function SidebarNav() {
-  const pathname = usePathname()
+  const pathname = usePathname();
+  const { logout } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/');
+  }
 
   return (
     <Sidebar>
@@ -55,12 +63,10 @@ export function SidebarNav() {
         <SidebarSeparator />
         <SidebarMenu>
           <SidebarMenuItem>
-            <Link href="/">
-                <SidebarMenuButton tooltip="Logout">
-                    <LogOut />
-                    <span>Logout</span>
-                </SidebarMenuButton>
-            </Link>
+            <SidebarMenuButton onClick={handleLogout} tooltip="Logout">
+                <LogOut />
+                <span>Logout</span>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

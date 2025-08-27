@@ -5,17 +5,64 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff } from 'lucide-react';
-import Link from 'next/link';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SetPasswordPage({ params }: { params: { token: string } }) {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const router = useRouter();
+    const { toast } = useToast();
+    const { completePasswordReset } = useAuth();
+    
+    // In a real Firebase app, the 'token' from the URL isn't used directly here.
+    // Instead, the oobCode from the email link is what matters.
+    // This page is the landing spot for that link.
 
-  // In a real app, you'd use the token to verify the user
-  console.log("Invitation Token:", params.token);
+    const handleSetPassword = async () => {
+        if (newPassword !== confirmPassword) {
+            toast({ variant: "destructive", title: "Passwords do not match."});
+            return;
+        }
+        if (newPassword.length < 6) {
+            toast({ variant: "destructive", title: "Password must be at least 6 characters."});
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            // The oobCode is a URL param added by Firebase, we need to extract it
+            const urlParams = new URLSearchParams(window.location.search);
+            const oobCode = urlParams.get('oobCode');
+
+            if (!oobCode) {
+                throw new Error("Invalid or missing action code. Please use the link from your email.");
+            }
+            
+            await completePasswordReset(oobCode, newPassword);
+
+            toast({
+                title: "Password Set Successfully!",
+                description: "You can now log in with your new password.",
+            });
+            router.push('/');
+        } catch (error) {
+            console.error("Failed to set password:", error);
+            toast({
+                variant: "destructive",
+                title: "Failed to Set Password",
+                description: "The link may be invalid or expired. Please request a new one.",
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/20 p-4">
@@ -61,6 +108,7 @@ export default function SetPasswordPage({ params }: { params: { token: string } 
                         <Input 
                             id="confirm-password" 
                             type={showConfirmPassword ? "text" : "password"}
+                            placeholder="••••••••"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                         />
@@ -74,17 +122,16 @@ export default function SetPasswordPage({ params }: { params: { token: string } 
                     </div>
                 </div>
 
-                <Link href="/dashboard" className="w-full">
-                    <Button className="w-full h-11 text-base">
-                        Set Password & Login
-                    </Button>
-                </Link>
+                <Button onClick={handleSetPassword} disabled={isLoading} className="w-full h-11 text-base">
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Set Password & Login
+                </Button>
             </div>
 
             <div className="space-y-3">
                 <h3 className="font-semibold">Password Requirements</h3>
                 <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground">
-                    <li>At least 8 characters long.</li>
+                    <li>At least 6 characters long.</li>
                     <li>Mix of letters, numbers, and symbols recommended.</li>
                     <li>Avoid using personal information.</li>
                 </ul>

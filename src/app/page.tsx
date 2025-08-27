@@ -6,8 +6,42 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/icons"
+import { useAuth } from "@/hooks/use-auth"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { useToast } from "@/hooks/use-toast"
+import { Loader2 } from "lucide-react"
 
 export default function LoginPage() {
+    const { login } = useAuth();
+    const router = useRouter();
+    const { toast } = useToast();
+    const [email, setEmail] = useState("admin@formflow.com");
+    const [password, setPassword] = useState("12345678");
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleLogin = async () => {
+        setIsLoading(true);
+        try {
+            await login(email, password);
+            router.push('/dashboard');
+            toast({
+                title: "Login Successful",
+                description: "Welcome back!",
+            });
+        } catch (error) {
+            console.error("Login failed:", error);
+            toast({
+                variant: "destructive",
+                title: "Login Failed",
+                description: "Invalid email or password. Please try again.",
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+
   return (
     <div className="w-full min-h-screen lg:grid lg:grid-cols-2">
       <div className="relative hidden h-full flex-col bg-muted p-10 text-white bg-gradient-to-br from-blue-600 to-blue-900 lg:flex">
@@ -43,7 +77,8 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 placeholder="m@example.com"
-                defaultValue="admin@formflow.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -57,13 +92,18 @@ export default function LoginPage() {
                   Forgot your password?
                 </Link>
               </div>
-              <Input id="password" type="password" defaultValue="12345678" required />
+              <Input 
+                id="password" 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required 
+                />
             </div>
-             <Link href="/dashboard">
-                <Button type="submit" className="w-full">
+            <Button onClick={handleLogin} disabled={isLoading} className="w-full">
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Login
-                </Button>
-            </Link>
+            </Button>
           </div>
         </div>
       </div>

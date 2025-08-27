@@ -1,3 +1,5 @@
+'use client';
+
 import Link from "next/link"
 import {
   Bell,
@@ -18,8 +20,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useAuth } from "@/hooks/use-auth"
+import { useRouter } from "next/navigation";
 
 export function Header() {
+    const { user, logout, userProfile } = useAuth();
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        await logout();
+        router.push('/');
+    };
+
+    const getInitials = (name: string = '') => {
+        return name.split(' ').map(n => n[0]).join('').toUpperCase();
+    }
+
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
       <div className="md:hidden">
@@ -43,14 +59,14 @@ export function Header() {
         <DropdownMenuTrigger asChild>
           <Button variant="secondary" size="icon" className="rounded-full">
             <Avatar className="h-8 w-8">
-                <AvatarImage src="https://picsum.photos/100/100" data-ai-hint="person avatar" alt="@shadcn" />
-                <AvatarFallback>DP</AvatarFallback>
+                <AvatarImage src={userProfile?.avatar} data-ai-hint="person avatar" alt={userProfile?.name} />
+                <AvatarFallback>{getInitials(userProfile?.name)}</AvatarFallback>
             </Avatar>
             <span className="sr-only">Toggle user menu</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Diana Prince</DropdownMenuLabel>
+          <DropdownMenuLabel>{userProfile?.name || user?.email}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem>
             <User className="mr-2 h-4 w-4" />
@@ -61,12 +77,10 @@ export function Header() {
             <span>Settings</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <Link href="/">
-            <DropdownMenuItem>
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
-            </DropdownMenuItem>
-          </Link>
+          <DropdownMenuItem onClick={handleLogout}>
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Log out</span>
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>

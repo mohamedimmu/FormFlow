@@ -25,7 +25,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, PlusCircle, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { createUser } from "@/lib/data";
+import { createUser, sendInvitation } from "@/lib/data";
+import { useAuth } from "@/hooks/use-auth";
 
 const countries = [
     { code: "+1", name: "USA" },
@@ -54,6 +55,7 @@ interface AddUserDialogProps {
 export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user, userProfile } = useAuth();
 
   const form = useForm<z.infer<typeof userSchema>>({
     resolver: zodResolver(userSchema),
@@ -73,45 +75,45 @@ export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogP
   };
 
   async function onSubmit(values: z.infer<typeof userSchema>) {
+    if(userProfile?.role !== 'Super Admin') {
+        toast({ variant: "destructive", title: "Permission Denied", description: "Only Super Admins can create new users." });
+        return;
+    }
+
     setIsLoading(true);
     try {
+      // In a real app, the password would be sent securely, perhaps via a backend.
+      // Here, we generate a random one for initial creation. The user will reset it.
+      const tempPassword = Math.random().toString(36).slice(-8);
+
       const newUser = await createUser({
         name: values.name,
         email: values.email,
         role: values.role,
         mobile: `${values.countryCode} ${values.mobile}`,
         avatar: `https://picsum.photos/seed/${values.name}/100/100`, // random avatar
-      });
+      }, tempPassword);
 
-      const invitationLink = `${window.location.origin}/invite/${newUser.invitationToken}`;
+      await sendInvitation(newUser.email);
       
       toast({
-        title: "User Created & Invitation Link Generated!",
-        description: (
-          <div className="space-y-2">
-            <p>Share this link with {newUser.name} to set up their account.</p>
-            <div className="flex items-center gap-2">
-              <Input readOnly value={invitationLink} className="text-xs" />
-              <Button size="icon" variant="outline" onClick={() => {
-                navigator.clipboard.writeText(invitationLink);
-                toast({ title: "Link Copied!" });
-              }}>
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        ),
-        duration: 20000, // Keep toast open longer
+        title: "User Created & Invitation Sent!",
+        description: `An invitation has been sent to ${newUser.email}. They can use it to set up their account.`,
+        duration: 10000,
       });
 
       onUserAdded();
       handleOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to create user:", error);
+      const description = error.code === 'auth/email-already-in-use'
+        ? "This email is already registered. Please use a different email."
+        : "Failed to create the user. Please try again.";
+      
       toast({
         variant: "destructive",
         title: "An Error Occurred",
-        description: "Failed to create the user. Please try again.",
+        description,
       });
     } finally {
       setIsLoading(false);
@@ -210,7 +212,7 @@ export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogP
               )}
             />
             <DialogFooter>
-              <Button type="submit" disabled={isLoading} className="w-full">
+              <Button type="submit" disabled={isLoading || userProfile?.role !== 'Super Admin'} className="w-full">
                 {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (

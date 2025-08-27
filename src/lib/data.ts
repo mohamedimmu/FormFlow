@@ -1,6 +1,8 @@
-import { collection, addDoc, getDocs, getDoc, doc, updateDoc, query, orderBy, limit, writeBatch, where } from "firebase/firestore";
+import { collection, addDoc, getDocs, getDoc, doc, updateDoc, query, orderBy, limit, writeBatch, where, documentId } from "firebase/firestore";
 import type { Question } from "@/components/forms/form-builder";
-import { db } from "./firebase";
+import { db, auth } from "./firebase";
+import { createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+
 
 export type Form = {
   id: string;
@@ -14,14 +16,13 @@ export type Form = {
 };
 
 export type User = {
-  id: string;
+  id: string; // This will be the Firebase Auth UID
   name: string;
   email: string;
   mobile: string;
   role: 'Employee' | 'Admin' | 'Super Admin';
   avatar: string;
   status: 'Pending' | 'Active';
-  invitationToken?: string;
 };
 
 export type FormResponse = {
@@ -38,22 +39,13 @@ const responsesCollection = collection(db, "responses");
 
 // Seeding function for initial data
 export async function seedInitialData() {
-    const usersSnapshot = await getDocs(query(usersCollection, limit(1)));
-    if (usersSnapshot.empty) {
-        console.log("No users found. Seeding default super admin...");
-        await createUser({
-            name: 'Super Admin',
-            email: 'admin@formflow.com',
-            mobile: '+1 123-456-7890',
-            role: 'Super Admin',
-            avatar: 'https://picsum.photos/seed/admin/100/100',
-        });
-        console.log("Default super admin created.");
-    }
+    // This function will be more complex now with auth
+    // For now, we assume a user is created via the UI.
+    // In a real app, you might have a script to create the first admin user.
 }
 
 // Call seeding function on startup
-seedInitialData();
+// seedInitialData(); // We will handle this manually for now.
 
 
 // Form functions
@@ -91,26 +83,46 @@ export async function updateForm(id: string, formData: Partial<Omit<Form, 'id'>>
 
 
 // User functions
-export async function createUser(userData: Omit<User, 'id' | 'status' | 'invitationToken'>): Promise<User> {
-    const invitationToken = Math.random().toString(36).substring(2);
-    const docRef = await addDoc(usersCollection, {
-        ...userData,
-        status: 'Pending',
-        invitationToken,
-    });
+export async function createUser(userData: Omit<User, 'id' | 'status'>, password_dont_use: string): Promise<User> {
+    
+    // NOTE: In a real-world scenario, you would not pass the password like this.
+    // You'd typically use a Cloud Function triggered by the document creation
+    // to create the Auth user, to avoid having password creation logic on the client.
+    // For this prototype, we'll do it on the client for simplicity.
+    const authUser = await createUserWithEmailAndPassword(auth, userData.email, password_dont_use);
 
-    return {
-        id: docRef.id,
+    const newUser: User = {
+        id: authUser.user.uid,
         ...userData,
-        status: 'Pending',
-        invitationToken
+        status: 'Active', // Or 'Pending' if you have an email verification flow
+    };
+    
+    // We use the UID from Auth as the document ID in Firestore for a 1:1 mapping.
+    await updateDoc(doc(usersCollection, authUser.user.uid), { ...newUser });
+
+    return newUser;
+}
+
+export async function getUserProfile(uid: string): Promise<User | null> {
+    const docRef = doc(db, "users", uid);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        return docSnap.data() as User;
     }
+    return null;
 }
 
 export async function getUsers(): Promise<User[]> {
     const snapshot = await getDocs(query(usersCollection, orderBy("name")));
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
 }
+
+export async function sendInvitation(email: string) {
+    // This simulates sending an invitation. In a real app, this would trigger an email.
+    await sendPasswordResetEmail(auth, email);
+    console.log(`Password reset/invitation email sent to ${email}. Check your inbox or console for the link.`);
+}
+
 
 // Response functions
 export async function getResponses(formId: string): Promise<FormResponse[]> {
