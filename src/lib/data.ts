@@ -145,6 +145,8 @@ export async function getUsers(): Promise<User[]> {
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
 }
 
+// This function is defined and called from useAuth now.
+// Leaving it here for reference but it's not the primary entry point.
 export async function sendInvitation(email: string) {
     const actionCodeSettings = {
         url: `${window.location.origin}/invite/set-password`,

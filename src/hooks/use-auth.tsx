@@ -2,10 +2,10 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
-import { onAuthStateChanged, User as FirebaseUser, signInWithEmailAndPassword, signOut, confirmPasswordReset, createUserWithEmailAndPassword } from 'firebase/auth';
+import { onAuthStateChanged, User as FirebaseUser, signInWithEmailAndPassword, signOut, confirmPasswordReset, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
-import { User as AppUser, getUserProfile, sendInvitation, updateUserProfile } from '@/lib/data';
+import { User as AppUser, getUserProfile, updateUserProfile } from '@/lib/data';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -91,7 +91,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const sendPasswordReset = async (email: string) => {
     // This now correctly points to the invitation sender
-    await sendInvitation(email);
+    const actionCodeSettings = {
+        url: `${window.location.origin}/`,
+        handleCodeInApp: false, // The user will be redirected back to the login page.
+    };
+    await sendPasswordResetEmail(auth, email, actionCodeSettings);
   };
   
   const completePasswordReset = async (code: string, newPassword: string) => {
@@ -99,10 +103,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const createUser = async (userData: Omit<AppUser, 'id' | 'status'>, password_dont_use: string): Promise<AppUser> => {
-    // This function should only be responsible for creating the user in Auth.
-    // The Firestore document will be created by the onAuthStateChanged listener
-    // in the new user's own session, which is more reliable.
-    // For this flow, we'll create the user and then the document directly.
     const userCredential = await createUserWithEmailAndPassword(auth, userData.email, password_dont_use);
     const authUid = userCredential.user.uid;
 
@@ -118,7 +118,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
   
   const sendInvitationToUser = async (email: string) => {
-    await sendInvitation(email);
+     const actionCodeSettings = {
+        url: `${window.location.origin}/invite/set-password`,
+        handleCodeInApp: true,
+    };
+    await sendPasswordResetEmail(auth, email, actionCodeSettings);
   };
 
   const value = {
