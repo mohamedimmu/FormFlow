@@ -4,12 +4,12 @@ import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "redacted",
-  authDomain: "fir-studio-test-prod.firebaseapp.com",
-  projectId: "fir-studio-test-prod",
-  storageBucket: "fir-studio-test-prod.appspot.com",
-  messagingSenderId: "1234567890",
-  appId: "1:1234567890:web:1234567890abcdef"
+  apiKey: "AIzaSyCKI3JoGAwPuYP29OpOOT4o3XitEGkGU8Q",
+  authDomain: "formflow-hfev3.firebaseapp.com",
+  projectId: "formflow-hfev3",
+  storageBucket: "formflow-hfev3.firebasestorage.app",
+  messagingSenderId: "880417003821",
+  appId: "1:880417003821:web:5c99f571a663fa6cf01ba4"
 };
 
 // Initialize Firebase

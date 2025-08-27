@@ -17,19 +17,30 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function loadStats() {
-        const forms = await getForms();
-        const totalForms = forms.length;
-        const totalResponses = forms.reduce((sum, form) => sum + form.responses, 0);
-        const activeForms = forms.filter(form => form.status === 'Active').length;
-        const avgResponses = totalForms > 0 ? totalResponses / totalForms : 0;
-        
-        setStats({
-            totalForms,
-            totalResponses,
-            activeForms,
-            avgResponses,
-        });
-        setIsLoading(false);
+        setIsLoading(true);
+        try {
+            const forms = await getForms();
+            if (forms.length > 0) {
+                const totalForms = forms.length;
+                const totalResponses = forms.reduce((sum, form) => sum + form.responses, 0);
+                const activeForms = forms.filter(form => form.status === 'Active').length;
+                const avgResponses = totalForms > 0 ? totalResponses / totalForms : 0;
+                
+                setStats({
+                    totalForms,
+                    totalResponses,
+                    activeForms,
+                    avgResponses,
+                });
+            } else {
+                setStats({ totalForms: 0, totalResponses: 0, activeForms: 0, avgResponses: 0 });
+            }
+        } catch (error) {
+            console.error("Failed to load dashboard stats:", error);
+            // Handle error state if necessary, e.g., show a toast notification
+        } finally {
+            setIsLoading(false);
+        }
     }
     loadStats();
   }, []);
