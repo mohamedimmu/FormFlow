@@ -38,48 +38,6 @@ const formsCollection = collection(db, "forms");
 const usersCollection = collection(db, "users");
 const responsesCollection = collection(db, "responses");
 
-// Seeding function for initial data
-export async function seedInitialData() {
-    const usersSnapshot = await getDocs(query(usersCollection, limit(1)));
-    if (usersSnapshot.empty) {
-        console.log("No users found. Seeding Super Admin...");
-        try {
-            // This is the default super admin.
-            const superAdminData = {
-                name: 'Super Admin',
-                email: 'admin@formflow.com',
-                role: 'Super Admin' as const,
-                mobile: '+1 1234567890',
-                avatar: 'https://picsum.photos/seed/SuperAdmin/100/100',
-            };
-            const defaultPassword = '12345678';
-
-            // Create user in Firebase Auth
-            const userCredential = await createUserWithEmailAndPassword(auth, superAdminData.email, defaultPassword);
-            const authUid = userCredential.user.uid;
-
-            // Create user profile in Firestore
-            await setDoc(doc(db, "users", authUid), {
-                id: authUid,
-                ...superAdminData,
-                status: 'Active',
-            });
-
-            console.log("Super Admin created successfully.");
-
-        } catch (error: any) {
-            if (error.code === 'auth/email-already-in-use') {
-                console.log("Super admin user already exists in Auth.");
-            } else {
-                console.error("Error seeding Super Admin:", error);
-            }
-        }
-    } else {
-        console.log("Users collection is not empty. Skipping seeding.");
-    }
-}
-
-
 // Form functions
 export async function createForm(formData: Omit<Form, 'id'>) {
     const docRef = await addDoc(formsCollection, {
@@ -184,9 +142,4 @@ export async function createResponse(formId: string, answers: { [key: string]: a
     }
 
     return docRef.id;
-}
-
-// Call this from a client component that runs once, like the AuthProvider
-if (typeof window !== 'undefined') {
-    // seedInitialData();
 }
