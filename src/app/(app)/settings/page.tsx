@@ -26,7 +26,6 @@ export default function SettingsPage() {
     if (!user) return;
     setIsLoading(true);
     try {
-        // The refreshUserProfile in the hook handles the update.
         await refreshUserProfile({ name });
         toast({
             title: "Profile Updated",

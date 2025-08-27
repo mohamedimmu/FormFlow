@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
-import { onAuthStateChanged, User as FirebaseUser, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, confirmPasswordReset, createUserWithEmailAndPassword } from 'firebase/auth';
+import { onAuthStateChanged, User as FirebaseUser, signInWithEmailAndPassword, signOut, confirmPasswordReset, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { User as AppUser, getUserProfile, sendInvitation as sendUserInvitation, updateUserProfile } from '@/lib/data';
@@ -27,28 +27,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userProfile, setUserProfile] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchProfile = useCallback(async (firebaseUser: FirebaseUser) => {
+    const profile = await getUserProfile(firebaseUser.uid);
+    setUserProfile(profile);
+  }, []);
+
   const refreshUserProfile = useCallback(async (dataToUpdate?: Partial<AppUser>) => {
     if (user) {
-        // Fetch the latest profile first to ensure it exists.
-        const existingProfile = await getUserProfile(user.uid);
-        
-        if (dataToUpdate && existingProfile) {
+        if (dataToUpdate) {
             await updateUserProfile(user.uid, dataToUpdate);
         }
-        
-        // After any potential update, fetch the latest profile data again.
-        const updatedProfile = await getUserProfile(user.uid);
-        setUserProfile(updatedProfile);
+        await fetchProfile(user); // Re-fetch the profile to get the latest data
     }
-  }, [user]);
+  }, [user, fetchProfile]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         setLoading(true);
         if (firebaseUser) {
             setUser(firebaseUser);
-            const profile = await getUserProfile(firebaseUser.uid);
-            setUserProfile(profile);
+            await fetchProfile(firebaseUser);
         } else {
             setUser(null);
             setUserProfile(null);
@@ -57,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [fetchProfile]);
 
   const login = async (email: string, password: string) => {
     await signInWithEmailAndPassword(auth, email, password);
@@ -87,7 +85,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         status: 'Active',
     };
     
-    // Use a single setDoc operation to create the user profile document
     await setDoc(doc(db, "users", authUid), newUser);
     
     return { ...newUser, id: authUid };

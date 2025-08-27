@@ -62,10 +62,8 @@ async function seedInitialData() {
             } catch (error: any) {
                 if (error.code === 'auth/email-already-in-use') {
                     console.log("Super admin user already exists in Firebase Auth. Will check Firestore.");
-                    // We can't get the UID directly if the user exists, so this path is tricky.
-                    // For a robust solution, we'd need a way to look up user by email server-side.
-                    // For this app, we'll assume if the Auth user exists, we don't need to re-create the Firestore doc
-                    // unless the collection is empty.
+                    // In a real app, you would need a way to get the uid for the existing email.
+                    // For this app's purpose, we'll assume a manual setup or a different flow if this happens.
                 } else {
                     throw error;
                 }
