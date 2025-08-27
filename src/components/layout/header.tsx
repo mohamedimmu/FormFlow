@@ -86,12 +86,6 @@ export function Header() {
           <DropdownMenuSeparator />
           <Link href="/settings">
             <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
-              <span>Profile</span>
-            </DropdownMenuItem>
-          </Link>
-          <Link href="/settings">
-            <DropdownMenuItem>
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
             </DropdownMenuItem>
