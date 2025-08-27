@@ -35,7 +35,11 @@ export function Header() {
 
     const getInitials = (name?: string) => {
         if (!name) return user?.email?.[0]?.toUpperCase() ?? 'U';
-        return name.split(' ').map(n => n[0]).join('').toUpperCase();
+        const names = name.split(' ');
+        if (names.length > 1) {
+            return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase();
     }
 
   return (
@@ -71,7 +75,7 @@ export function Header() {
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">{userProfile?.name || user?.email}</p>
-                <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                {user?.email && <p className="text-xs leading-none text-muted-foreground">{user.email}</p>}
                 {userProfile?.role && (
                     <p className="text-xs leading-none text-muted-foreground capitalize pt-1">
                        Role: <span className="font-semibold">{userProfile.role}</span>
