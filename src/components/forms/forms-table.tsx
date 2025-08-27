@@ -121,7 +121,7 @@ export function FormsTable() {
                       <TableCell><Skeleton className="h-8 w-8" /></TableCell>
                     </TableRow>
                   ))
-                ) : (
+                ) : filteredForms.length > 0 ? (
                   filteredForms.map((form) => (
                   <TableRow key={form.id}>
                       <TableCell>
@@ -167,6 +167,12 @@ export function FormsTable() {
                       </TableCell>
                   </TableRow>
                   ))
+                ) : (
+                    <TableRow>
+                        <TableCell colSpan={5} className="h-24 text-center">
+                            No forms found.
+                        </TableCell>
+                    </TableRow>
                 )}
             </TableBody>
             </Table>
