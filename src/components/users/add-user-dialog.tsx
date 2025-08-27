@@ -57,6 +57,8 @@ export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogP
   const { toast } = useToast();
   const { user, userProfile } = useAuth();
 
+  const isSuperAdmin = userProfile?.role?.toLowerCase() === 'super admin';
+
   const form = useForm<z.infer<typeof userSchema>>({
     resolver: zodResolver(userSchema),
     defaultValues: {
@@ -75,7 +77,7 @@ export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogP
   };
 
   async function onSubmit(values: z.infer<typeof userSchema>) {
-    if(userProfile?.role !== 'Super Admin') {
+    if(!isSuperAdmin) {
         toast({ variant: "destructive", title: "Permission Denied", description: "Only Super Admins can create new users." });
         return;
     }
@@ -212,7 +214,7 @@ export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogP
               )}
             />
             <DialogFooter>
-              <Button type="submit" disabled={isLoading || userProfile?.role !== 'Super Admin'} className="w-full">
+              <Button type="submit" disabled={isLoading || !isSuperAdmin} className="w-full">
                 {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
