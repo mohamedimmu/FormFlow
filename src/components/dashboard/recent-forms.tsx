@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Eye, MoreHorizontal } from "lucide-react"
+import { Eye, Link as LinkIcon, MoreHorizontal } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -30,10 +30,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { getRecentForms, type Form } from "@/lib/data"
 import { Skeleton } from "../ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 export function RecentForms() {
   const [recentForms, setRecentForms] = useState<Form[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     async function loadRecentForms() {
@@ -44,6 +46,15 @@ export function RecentForms() {
     }
     loadRecentForms();
   }, []);
+
+  const handleCopyLink = (formId: string) => {
+    const url = `${window.location.origin}/form/${formId}`;
+    navigator.clipboard.writeText(url);
+    toast({
+        title: "Link Copied!",
+        description: "The responder link has been copied to your clipboard.",
+    });
+  }
 
   return (
     <Card>
@@ -113,7 +124,10 @@ export function RecentForms() {
                         <Link href={`/forms/${form.id}/responses`}>
                             <DropdownMenuItem>View Responses</DropdownMenuItem>
                         </Link>
-                        <DropdownMenuItem>Share</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleCopyLink(form.id)}>
+                            <LinkIcon className="mr-2 h-4 w-4" />
+                            Copy Responder Link
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
                         </DropdownMenuContent>

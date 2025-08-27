@@ -25,6 +25,7 @@ import {
   Eye,
   CheckCircle,
   XCircle,
+  Link as LinkIcon,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -125,6 +126,15 @@ export function FormsTable() {
     document.body.removeChild(link);
   }
 
+  const handleCopyLink = (formId: string) => {
+    const url = `${window.location.origin}/form/${formId}`;
+    navigator.clipboard.writeText(url);
+    toast({
+        title: "Link Copied!",
+        description: "The responder link has been copied to your clipboard.",
+    });
+  }
+
 
   return (
     <Card>
@@ -222,7 +232,10 @@ export function FormsTable() {
                           <Link href={`/forms/${form.id}/responses`}>
                               <DropdownMenuItem>View Responses</DropdownMenuItem>
                           </Link>
-                          <DropdownMenuItem>Share</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleCopyLink(form.id)}>
+                            <LinkIcon className="mr-2 h-4 w-4" />
+                            Copy Responder Link
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuSub>
                             <DropdownMenuSubTrigger>
