@@ -101,23 +101,25 @@ export function UsersTable() {
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-between py-4">
-        <div className="text-sm text-muted-foreground">
-          Showing 1-{users.length} of {users.length} Users
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" disabled={users.length === 0}>Previous</Button>
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8">1</Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8">2</Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8">3</Button>
-            <span>...</span>
-            <Button variant="ghost" size="icon" className="h-8 w-8">8</Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8">9</Button>
+      {users.length > 0 && (
+        <div className="flex items-center justify-between py-4">
+          <div className="text-sm text-muted-foreground">
+            Showing 1-{users.length} of {users.length} Users
           </div>
-          <Button variant="outline" size="sm" disabled={users.length === 0}>Next</Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" disabled={users.length === 0}>Previous</Button>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" className="h-8 w-8">1</Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8">2</Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8">3</Button>
+              <span>...</span>
+              <Button variant="ghost" size="icon" className="h-8 w-8">8</Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8">9</Button>
+            </div>
+            <Button variant="outline" size="sm" disabled={users.length === 0}>Next</Button>
+          </div>
         </div>
-      </div>
+      )}
     </>
   )
 }
