@@ -120,3 +120,14 @@ export const responses: FormResponse[] = [
     { id: 'resp3', submittedAt: '2023-10-27T10:10:00Z', q1: 'Neutral', q2: 'It\'s okay', q3: '7' },
     { id: 'resp4', submittedAt: '2023-10-27T11:20:00Z', q1: 'Very Satisfied', q2: 'Excellent customer support!', q3: '9' },
 ];
+
+import type { Question } from "@/components/forms/form-builder";
+
+export const MOCK_QUESTIONS: Question[] = [
+    { id: 1, type: 'short-answer', title: 'What is your name?', required: true, options: [] },
+    { id: 2, type: 'paragraph', title: 'What is your feedback?', required: true, options: [] },
+    { id: 3, type: 'multiple-choice', title: 'What is your favorite color?', required: false, options: ['Red', 'Green', 'Blue'] },
+    { id: 4, type: 'checkboxes', title: 'Which topics are you interested in?', required: false, options: ['Technology', 'Health', 'Sports'] },
+    { id: 5, type: 'dropdown', title: 'Select your country', required: true, options: ['USA', 'Canada', 'Mexico'] },
+    { id: 6, type: 'file-upload', title: 'Upload your profile picture', required: false, options: [] },
+];

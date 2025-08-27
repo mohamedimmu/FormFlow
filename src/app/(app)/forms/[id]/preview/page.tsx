@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { notFound } from 'next/navigation';
 import { FormDisplay } from "@/components/forms/form-display";
-import { forms } from "@/lib/data";
+import { forms, MOCK_QUESTIONS } from "@/lib/data";
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Question } from '@/components/forms/form-builder';
 
@@ -43,19 +43,10 @@ export default function FormPreviewPage({ params }: { params: { id: string } }) 
         // Fallback to mock data if nothing valid in local storage
         const form = forms.find(f => f.id === params.id);
         if (form) {
-            // This is a mock for when there's no live preview data.
-            const mockQuestions: Question[] = [
-                { id: 1, type: 'short-answer', title: 'What is your name?', required: true, options: [] },
-                { id: 2, type: 'paragraph', title: 'What is your feedback?', required: true, options: [] },
-                { id: 3, type: 'multiple-choice', title: 'What is your favorite color?', required: false, options: ['Red', 'Green', 'Blue'] },
-                { id: 4, type: 'checkboxes', title: 'Which topics are you interested in?', required: false, options: ['Technology', 'Health', 'Sports'] },
-                { id: 5, type: 'dropdown', title: 'Select your country', required: true, options: ['USA', 'Canada', 'Mexico'] },
-                { id: 6, type: 'file-upload', title: 'Upload your profile picture', required: false, options: [] },
-            ];
-
+            // Use the consistent mock data source
             setPreviewForm({
                 ...form,
-                questions: mockQuestions.slice(0, form.questions > 6 ? 6 : form.questions)
+                questions: MOCK_QUESTIONS.slice(0, form.questions)
             });
         }
         setIsLoading(false);
