@@ -127,6 +127,11 @@ export async function getUserProfile(uid: string): Promise<User | null> {
     return null;
 }
 
+export async function updateUserProfile(uid: string, data: Partial<User>) {
+    const docRef = doc(db, "users", uid);
+    await updateDoc(docRef, data);
+}
+
 export async function getUsers(): Promise<User[]> {
     const snapshot = await getDocs(query(usersCollection, orderBy("name")));
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));

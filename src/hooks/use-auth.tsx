@@ -4,8 +4,8 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { onAuthStateChanged, User as FirebaseUser, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, confirmPasswordReset, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
-import { User as AppUser, getUserProfile, sendInvitation as sendUserInvitation } from '@/lib/data';
+import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { User as AppUser, getUserProfile, sendInvitation as sendUserInvitation, updateUserProfile } from '@/lib/data';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -17,6 +17,7 @@ interface AuthContextType {
   completePasswordReset: (code: string, newPassword: string) => Promise<void>;
   createUser: (userData: Omit<AppUser, 'id' | 'status'>, password_dont_use: string) => Promise<AppUser>;
   sendInvitation: (email: string) => Promise<void>;
+  refreshUserProfile: (data?: Partial<AppUser>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,6 +26,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userProfile, setUserProfile] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const refreshUserProfile = useCallback(async (dataToUpdate?: Partial<AppUser>) => {
+    if (user) {
+        if (dataToUpdate) {
+            await updateUserProfile(user.uid, dataToUpdate);
+        }
+        const profile = await getUserProfile(user.uid);
+        setUserProfile(profile);
+    }
+  }, [user]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -91,7 +102,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     sendPasswordReset,
     completePasswordReset,
     createUser,
-    sendInvitation
+    sendInvitation,
+    refreshUserProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

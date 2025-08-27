@@ -6,9 +6,42 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function SettingsPage() {
-  const { userProfile } = useAuth();
+  const { userProfile, refreshUserProfile } = useAuth();
+  const [name, setName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (userProfile) {
+      setName(userProfile.name);
+    }
+  }, [userProfile]);
+
+  const handleUpdateProfile = async () => {
+    if (!userProfile) return;
+    setIsLoading(true);
+    try {
+        await refreshUserProfile({ name });
+        toast({
+            title: "Profile Updated",
+            description: "Your account information has been updated.",
+        });
+    } catch (error) {
+        console.error("Failed to update profile", error);
+        toast({
+            variant: "destructive",
+            title: "Update Failed",
+            description: "Could not update your profile. Please try again.",
+        })
+    } finally {
+        setIsLoading(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -28,7 +61,7 @@ export default function SettingsPage() {
                     <div className="grid md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <Label htmlFor="name">Name</Label>
-                            <Input id="name" defaultValue={userProfile?.name} />
+                            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
                         </div>
                          <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
@@ -45,7 +78,10 @@ export default function SettingsPage() {
                     </div>
                 </CardContent>
                 <CardFooter>
-                    <Button>Update Profile</Button>
+                    <Button onClick={handleUpdateProfile} disabled={isLoading}>
+                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Update Profile
+                    </Button>
                 </CardFooter>
             </Card>
 
