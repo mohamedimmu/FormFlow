@@ -25,28 +25,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Seed data on initial load
-    seedInitialData();
-    
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true);
-      if (firebaseUser) {
-        setUser(firebaseUser);
-        const profile = await getUserProfile(firebaseUser.uid);
-        setUserProfile(profile);
-      } else {
-        setUser(null);
-        setUserProfile(null);
-      }
-      setLoading(false);
-    });
+    const initializeApp = async () => {
+        await seedInitialData();
 
-    return () => unsubscribe();
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            setLoading(true);
+            if (firebaseUser) {
+                setUser(firebaseUser);
+                const profile = await getUserProfile(firebaseUser.uid);
+                setUserProfile(profile);
+            } else {
+                setUser(null);
+                setUserProfile(null);
+            }
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    };
+    
+    initializeApp();
   }, []);
 
   const login = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
-    // onAuthStateChanged will handle setting user and profile state.
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    // onAuthStateChanged will handle setting user and profile state,
+    // which will trigger a re-render with the correct profile info.
   };
 
   const logout = async () => {
