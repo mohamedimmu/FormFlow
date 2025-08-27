@@ -55,6 +55,7 @@ export function ResponsesTable({ formId, questions }: ResponsesTableProps) {
     }
 
     const questionHeaders = questions.map(q => ({ id: String(q.id), title: q.title })).slice(0, 4); // Limit to first 4 questions for table view
+    const hasMoreQuestions = questions.length > 4;
 
     const exportToCsv = () => {
         if (responses.length === 0) {
@@ -114,6 +115,7 @@ export function ResponsesTable({ formId, questions }: ResponsesTableProps) {
                                 <TableRow>
                                     <TableHead className="w-[180px]">Submitted At</TableHead>
                                     {questionHeaders.map(q => <TableHead key={q.id}>{q.title}</TableHead>)}
+                                    {hasMoreQuestions && <TableHead>...</TableHead>}
                                     <TableHead><span className="sr-only">Actions</span></TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -123,6 +125,7 @@ export function ResponsesTable({ formId, questions }: ResponsesTableProps) {
                                         <TableRow key={i}>
                                             <TableCell><Skeleton className="h-5 w-36" /></TableCell>
                                             {questionHeaders.map(q => <TableCell key={q.id}><Skeleton className="h-5 w-24" /></TableCell>)}
+                                            {hasMoreQuestions && <TableCell><Skeleton className="h-5 w-8" /></TableCell>}
                                             <TableCell><Skeleton className="h-8 w-8" /></TableCell>
                                         </TableRow>
                                     ))
@@ -133,8 +136,9 @@ export function ResponsesTable({ formId, questions }: ResponsesTableProps) {
                                             {questionHeaders.map(q => {
                                                 const answer = response.answers[q.id];
                                                 const displayAnswer = Array.isArray(answer) ? answer.join(', ') : String(answer || '-');
-                                                return <TableCell key={q.id}>{displayAnswer}</TableCell>
+                                                return <TableCell key={q.id} className="truncate max-w-xs">{displayAnswer}</TableCell>
                                             })}
+                                            {hasMoreQuestions && <TableCell>...</TableCell>}
                                             <TableCell>
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
@@ -152,7 +156,7 @@ export function ResponsesTable({ formId, questions }: ResponsesTableProps) {
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={questionHeaders.length + 2} className="h-24 text-center">
+                                        <TableCell colSpan={questionHeaders.length + (hasMoreQuestions ? 2 : 1)} className="h-24 text-center">
                                             No submissions yet.
                                         </TableCell>
                                     </TableRow>
