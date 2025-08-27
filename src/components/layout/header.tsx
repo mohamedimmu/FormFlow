@@ -33,8 +33,9 @@ export function Header() {
         router.push('/');
     };
 
-    const getInitials = (name: string = '') => {
-        return name.split(' ').map(n => n[0]).join('').toUpperCase() || (user?.email?.[0] || '').toUpperCase();
+    const getInitials = (name?: string) => {
+        if (!name) return user?.email?.[0]?.toUpperCase() ?? 'U';
+        return name.split(' ').map(n => n[0]).join('').toUpperCase();
     }
 
   return (
@@ -71,7 +72,11 @@ export function Header() {
             <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">{userProfile?.name || user?.email}</p>
                 <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
-                {userProfile?.role && <p className="text-xs leading-none text-muted-foreground capitalize pt-1">{userProfile?.role}</p>}
+                {userProfile?.role && (
+                    <p className="text-xs leading-none text-muted-foreground capitalize pt-1">
+                       Role: <span className="font-semibold">{userProfile.role}</span>
+                    </p>
+                )}
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />

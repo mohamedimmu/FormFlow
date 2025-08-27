@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { onAuthStateChanged, User as FirebaseUser, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, confirmPasswordReset } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
@@ -24,27 +24,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userProfile, setUserProfile] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchUserProfile = useCallback(async (firebaseUser: FirebaseUser | null) => {
+    if (firebaseUser) {
+      const profile = await getUserProfile(firebaseUser.uid);
+      setUserProfile(profile);
+    } else {
+      setUserProfile(null);
+    }
+  }, []);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setLoading(true);
       setUser(user);
-      if (user) {
-        const profile = await getUserProfile(user.uid);
-        setUserProfile(profile);
-      } else {
-        setUserProfile(null);
-      }
+      await fetchUserProfile(user);
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [fetchUserProfile]);
 
   const login = async (email: string, password: string) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const profile = await getUserProfile(userCredential.user.uid);
-    setUser(userCredential.user);
-    setUserProfile(profile);
+    // onAuthStateChanged will handle setting user and profile state.
   };
 
   const logout = async () => {
@@ -54,9 +56,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const sendPasswordReset = async (email: string) => {
-    await sendPasswordResetEmail(auth, email, {
-      url: `${window.location.origin}/invite/reset`, // The page user will be redirected to
-    });
+    // Note: ensure this matches the page where users reset their password.
+    // The [token] part is a placeholder for the actual page route.
+    const actionCodeSettings = {
+        url: `${window.location.origin}/invite/reset-password`,
+    };
+    await sendPasswordResetEmail(auth, email, actionCodeSettings);
   };
 
   const completePasswordReset = async (code: string, newPassword: string) => {
@@ -73,7 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     completePasswordReset
   };
 
-  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
