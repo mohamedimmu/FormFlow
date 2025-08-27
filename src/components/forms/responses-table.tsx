@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -24,6 +25,7 @@ import { useEffect, useState } from "react";
 import { Skeleton } from "../ui/skeleton";
 import type { Question } from "./form-builder";
 import { ResponseDetailsDialog } from "./response-details-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface ResponsesTableProps {
     formId: string;
@@ -35,6 +37,7 @@ export function ResponsesTable({ formId, questions }: ResponsesTableProps) {
     const [isLoading, setIsLoading] = useState(true);
     const [selectedResponse, setSelectedResponse] = useState<FormResponse | null>(null);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+    const { toast } = useToast();
     
     useEffect(() => {
         async function loadResponses() {
@@ -53,6 +56,44 @@ export function ResponsesTable({ formId, questions }: ResponsesTableProps) {
 
     const questionHeaders = questions.map(q => ({ id: String(q.id), title: q.title })).slice(0, 4); // Limit to first 4 questions for table view
 
+    const exportToCsv = () => {
+        if (responses.length === 0) {
+            toast({
+                variant: 'destructive',
+                title: 'No Data to Export',
+                description: 'There are no submissions to export.',
+            });
+            return;
+        }
+
+        const headers = ['Submitted At', ...questions.map(q => q.title)];
+        const questionIds = questions.map(q => String(q.id));
+
+        const rows = responses.map(response => {
+            const rowData = [
+                format(new Date(response.submittedAt), "PPP p"),
+                ...questionIds.map(qid => {
+                    const answer = response.answers[qid] || '';
+                    const answerString = Array.isArray(answer) ? answer.join('; ') : String(answer);
+                    // Escape commas and double quotes
+                    return `"${answerString.replace(/"/g, '""')}"`;
+                })
+            ];
+            return rowData.join(',');
+        });
+
+        const csvContent = [headers.join(','), ...rows].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `form-${formId}-responses.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
     return (
         <>
             <Card>
@@ -61,7 +102,7 @@ export function ResponsesTable({ formId, questions }: ResponsesTableProps) {
                         <CardTitle>Submissions</CardTitle>
                         <CardDescription>Individual responses from your audience.</CardDescription>
                     </div>
-                    <Button variant="outline" disabled={responses.length === 0}>
+                    <Button variant="outline" onClick={exportToCsv} disabled={isLoading || responses.length === 0}>
                         <FileDown className="mr-2 h-4 w-4" />
                         Export to Excel
                     </Button>
@@ -89,7 +130,11 @@ export function ResponsesTable({ formId, questions }: ResponsesTableProps) {
                                     responses.map((response) => (
                                         <TableRow key={response.id}>
                                             <TableCell>{format(new Date(response.submittedAt), "PPP p")}</TableCell>
-                                            {questionHeaders.map(q => <TableCell key={q.id}>{String(response.answers[q.id] || '-')}</TableCell>)}
+                                            {questionHeaders.map(q => {
+                                                const answer = response.answers[q.id];
+                                                const displayAnswer = Array.isArray(answer) ? answer.join(', ') : String(answer || '-');
+                                                return <TableCell key={q.id}>{displayAnswer}</TableCell>
+                                            })}
                                             <TableCell>
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
