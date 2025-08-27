@@ -59,6 +59,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
+import { forms } from '@/lib/data';
 
 export type QuestionType = 'short-answer' | 'paragraph' | 'multiple-choice' | 'checkboxes' | 'dropdown' | 'file-upload';
 
@@ -234,13 +235,30 @@ export function FormBuilder({ existingForm }: FormBuilderProps) {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    // Here you would typically send the data to your backend:
-    // const formData = { id: existingForm?.id, title: formTitle, description: formDescription, questions };
-    // if (existingForm) {
-    //   await api.updateForm(formData);
-    // } else {
-    //   await api.createForm(formData);
-    // }
+    const formData = {
+        name: formTitle,
+        description: formDescription,
+        questionsData: questions,
+        questions: questions.length,
+    };
+
+    if (existingForm) {
+        // Find the form in the mock data and update it
+        const formIndex = forms.findIndex(f => f.id === existingForm.id);
+        if (formIndex !== -1) {
+            forms[formIndex] = { ...forms[formIndex], ...formData };
+        }
+    } else {
+        // Create a new form and add it to the mock data
+        const newForm = {
+            id: (forms.length + 1).toString(),
+            ...formData,
+            responses: 0,
+            createdAt: new Date().toISOString().split('T')[0],
+            status: 'Active' as const,
+        };
+        forms.unshift(newForm); // Add to the beginning of the array
+    }
     
     setIsSaving(false);
     toast({
