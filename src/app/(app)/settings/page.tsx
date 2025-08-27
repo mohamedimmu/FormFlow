@@ -7,8 +7,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function SettingsPage() {
+  const { user, userProfile } = useAuth();
+
   return (
     <div className="space-y-6">
       <div>
@@ -24,13 +27,23 @@ export default function SettingsPage() {
                     <CardDescription>Update your personal details.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Name</Label>
-                        <Input id="name" placeholder="Your Name" />
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" placeholder="your@email.com" disabled />
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Name</Label>
+                            <Input id="name" defaultValue={userProfile?.name} />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input id="email" type="email" defaultValue={userProfile?.email} disabled />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="mobile">Mobile</Label>
+                            <Input id="mobile" defaultValue={userProfile?.mobile} disabled />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="role">Role</Label>
+                            <Input id="role" defaultValue={userProfile?.role} disabled />
+                        </div>
                     </div>
                 </CardContent>
                 <CardFooter>
