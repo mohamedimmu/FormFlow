@@ -1,13 +1,15 @@
 import type { ElementType } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Skeleton } from '../ui/skeleton';
 
 interface StatCardProps {
   title: string;
   value: string | number;
   icon: ElementType;
+  isLoading?: boolean;
 }
 
-export function StatCard({ title, value, icon: Icon }: StatCardProps) {
+export function StatCard({ title, value, icon: Icon, isLoading = false }: StatCardProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -15,7 +17,11 @@ export function StatCard({ title, value, icon: Icon }: StatCardProps) {
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        {isLoading ? (
+            <Skeleton className="h-8 w-20" />
+        ) : (
+            <div className="text-2xl font-bold">{value}</div>
+        )}
       </CardContent>
     </Card>
   )

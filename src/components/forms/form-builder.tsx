@@ -59,7 +59,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
-import { forms } from '@/lib/data';
+import { createForm, updateForm, type Form } from '@/lib/data';
 
 export type QuestionType = 'short-answer' | 'paragraph' | 'multiple-choice' | 'checkboxes' | 'dropdown' | 'file-upload';
 
@@ -71,12 +71,7 @@ export interface Question {
   options?: string[];
 }
 
-export interface ExistingForm {
-    id: string;
-    name: string;
-    description: string;
-    questions: Question[];
-}
+export interface ExistingForm extends Form {}
 
 interface FormBuilderProps {
     existingForm?: ExistingForm;
@@ -197,7 +192,7 @@ export function FormBuilder({ existingForm }: FormBuilderProps) {
     if (existingForm) {
       setFormTitle(existingForm.name);
       setFormDescription(existingForm.description);
-      setQuestions(existingForm.questions || []);
+      setQuestions(existingForm.questionsData || []);
     }
   }, [existingForm]);
 
@@ -232,8 +227,6 @@ export function FormBuilder({ existingForm }: FormBuilderProps) {
 
   const handleSave = async () => {
     setIsSaving(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
     
     const formData = {
         name: formTitle,
@@ -242,30 +235,33 @@ export function FormBuilder({ existingForm }: FormBuilderProps) {
         questions: questions.length,
     };
 
-    if (existingForm) {
-        // Find the form in the mock data and update it
-        const formIndex = forms.findIndex(f => f.id === existingForm.id);
-        if (formIndex !== -1) {
-            forms[formIndex] = { ...forms[formIndex], ...formData };
+    try {
+        if (existingForm) {
+            await updateForm(existingForm.id, formData);
+        } else {
+            await createForm({
+                ...formData,
+                responses: 0,
+                createdAt: new Date().toISOString(),
+                status: 'Active' as const,
+            });
         }
-    } else {
-        // Create a new form and add it to the mock data
-        const newForm = {
-            id: `form_${Date.now()}`,
-            ...formData,
-            responses: 0,
-            createdAt: new Date().toISOString().split('T')[0],
-            status: 'Active' as const,
-        };
-        forms.unshift(newForm); // Add to the beginning of the array
+        
+        setIsSaving(false);
+        toast({
+            title: `Form ${existingForm ? 'Updated' : 'Saved'}!`,
+            description: `The form "${formTitle}" has been successfully ${existingForm ? 'updated' : 'created'}.`,
+        })
+        router.push('/forms');
+    } catch (error) {
+        console.error("Error saving form: ", error);
+        setIsSaving(false);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not save the form. Please try again.",
+        })
     }
-    
-    setIsSaving(false);
-    toast({
-        title: `Form ${existingForm ? 'Updated' : 'Saved'}!`,
-        description: `The form "${formTitle}" has been successfully ${existingForm ? 'updated' : 'created'}.`,
-    })
-    router.push('/forms');
   }
 
   function handleDragEnd(event: DragEndEvent) {

@@ -1,4 +1,6 @@
+import { collection, addDoc, getDocs, getDoc, doc, updateDoc, query, orderBy, limit } from "firebase/firestore";
 import type { Question } from "@/components/forms/form-builder";
+import { db } from "./firebase";
 
 export type Form = {
   id: string;
@@ -159,3 +161,35 @@ export const MOCK_QUESTIONS: Question[] = [
     { id: 5, type: 'dropdown', title: 'Select your country', required: true, options: ['USA', 'Canada', 'Mexico'] },
     { id: 6, type: 'file-upload', title: 'Upload your profile picture', required: false, options: [] },
 ];
+
+// Firestore functions
+const formsCollection = collection(db, "forms");
+
+export async function createForm(formData: Omit<Form, 'id'>) {
+    const docRef = await addDoc(formsCollection, formData);
+    return docRef.id;
+}
+
+export async function getForms(): Promise<Form[]> {
+    const snapshot = await getDocs(query(formsCollection, orderBy("createdAt", "desc")));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Form));
+}
+
+export async function getRecentForms(count: number): Promise<Form[]> {
+    const snapshot = await getDocs(query(formsCollection, orderBy("createdAt", "desc"), limit(count)));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Form));
+}
+
+export async function getForm(id: string): Promise<Form | null> {
+    const docRef = doc(db, "forms", id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() } as Form;
+    }
+    return null;
+}
+
+export async function updateForm(id: string, formData: Partial<Form>) {
+    const docRef = doc(db, "forms", id);
+    await updateDoc(docRef, formData);
+}

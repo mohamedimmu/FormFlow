@@ -38,15 +38,22 @@ import {
   TabsList,
   TabsTrigger
 } from "@/components/ui/tabs"
-import { forms, type Form } from "@/lib/data"
+import { getForms, type Form } from "@/lib/data"
+import { Skeleton } from "../ui/skeleton";
 
 export function FormsTable() {
   const [allForms, setAllForms] = useState<Form[]>([]);
   const [activeTab, setActiveTab] = useState("all");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // This ensures we have the latest data when the component mounts or data source changes.
-    setAllForms(forms);
+    async function loadForms() {
+      setIsLoading(true);
+      const formsFromDb = await getForms();
+      setAllForms(formsFromDb);
+      setIsLoading(false);
+    }
+    loadForms();
   }, []);
 
   const filteredForms = allForms.filter(form => {
@@ -104,51 +111,63 @@ export function FormsTable() {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {filteredForms.map((form) => (
-                <TableRow key={form.id}>
-                    <TableCell>
-                    <div className="font-medium">{form.name}</div>
-                    <div className="text-sm text-muted-foreground">
-                        {form.questions} questions
-                    </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                    <Badge variant={form.status === 'Active' ? 'default' : 'secondary'} className={form.status === 'Active' ? 'bg-accent text-accent-foreground' : ''}>
-                        {form.status}
-                    </Badge>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">{form.responses}</TableCell>
-                    <TableCell className="hidden lg:table-cell">{form.createdAt}</TableCell>
-                    <TableCell>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                        </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <Link href={`/forms/${form.id}/edit`}>
-                          <DropdownMenuItem>Edit</DropdownMenuItem>
-                        </Link>
-                        <Link href={`/forms/${form.id}/preview`}>
-                            <DropdownMenuItem>
-                                <Eye className="mr-2 h-4 w-4" />
-                                Preview
-                            </DropdownMenuItem>
-                        </Link>
-                        <Link href={`/forms/${form.id}/responses`}>
-                            <DropdownMenuItem>View Responses</DropdownMenuItem>
-                        </Link>
-                        <DropdownMenuItem>Share</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    </TableCell>
-                </TableRow>
-                ))}
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell><Skeleton className="h-5 w-48" /></TableCell>
+                      <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-20" /></TableCell>
+                      <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-10" /></TableCell>
+                      <TableCell className="hidden lg:table-cell"><Skeleton className="h-5 w-24" /></TableCell>
+                      <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  filteredForms.map((form) => (
+                  <TableRow key={form.id}>
+                      <TableCell>
+                      <div className="font-medium">{form.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                          {form.questions} questions
+                      </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                      <Badge variant={form.status === 'Active' ? 'default' : 'secondary'} className={form.status === 'Active' ? 'bg-accent text-accent-foreground' : ''}>
+                          {form.status}
+                      </Badge>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">{form.responses}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{new Date(form.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                      <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                          <Button aria-haspopup="true" size="icon" variant="ghost">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                          </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <Link href={`/forms/${form.id}/edit`}>
+                            <DropdownMenuItem>Edit</DropdownMenuItem>
+                          </Link>
+                          <Link href={`/forms/${form.id}/preview`}>
+                              <DropdownMenuItem>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Preview
+                              </DropdownMenuItem>
+                          </Link>
+                          <Link href={`/forms/${form.id}/responses`}>
+                              <DropdownMenuItem>View Responses</DropdownMenuItem>
+                          </Link>
+                          <DropdownMenuItem>Share</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                          </DropdownMenuContent>
+                      </DropdownMenu>
+                      </TableCell>
+                  </TableRow>
+                  ))
+                )}
             </TableBody>
             </Table>
         </div>

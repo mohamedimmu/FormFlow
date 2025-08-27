@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { notFound } from 'next/navigation';
 import { FormDisplay } from "@/components/forms/form-display";
-import { forms } from "@/lib/data";
+import { getForm } from "@/lib/data";
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Question } from '@/components/forms/form-builder';
 
@@ -21,36 +21,39 @@ export default function FormPreviewPage({ params }: { params: { id: string } }) 
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // This effect runs only on the client-side
-        try {
-            const storedPreviewData = localStorage.getItem('form-preview');
-            if (storedPreviewData) {
-                const parsedData: FormDataType = JSON.parse(storedPreviewData);
-                // Use this data if it's for the form being previewed (or a new unsaved form)
-                if (parsedData.id === id || id === 'new') {
-                    setPreviewForm(parsedData);
-                    // We clear it so a normal page load doesn't accidentally pick it up again
-                    localStorage.removeItem('form-preview');
-                    setIsLoading(false);
-                    return;
+        async function loadForm() {
+            // This effect runs only on the client-side
+            try {
+                const storedPreviewData = localStorage.getItem('form-preview');
+                if (storedPreviewData) {
+                    const parsedData: FormDataType = JSON.parse(storedPreviewData);
+                    // Use this data if it's for the form being previewed (or a new unsaved form)
+                    if (parsedData.id === id || id === 'new') {
+                        setPreviewForm(parsedData);
+                        // We clear it so a normal page load doesn't accidentally pick it up again
+                        localStorage.removeItem('form-preview');
+                        setIsLoading(false);
+                        return;
+                    }
                 }
+            } catch (error) {
+                console.error("Could not parse form preview data from localStorage", error);
+                // Clear potentially corrupted data
+                localStorage.removeItem('form-preview');
             }
-        } catch (error) {
-            console.error("Could not parse form preview data from localStorage", error);
-            // Clear potentially corrupted data
-            localStorage.removeItem('form-preview');
+            
+            // Fallback to fetching from DB if nothing valid in local storage
+            const form = await getForm(id);
+            if (form) {
+                setPreviewForm({
+                    ...form,
+                    questions: form.questionsData || []
+                });
+            }
+            setIsLoading(false);
         }
-        
-        // Fallback to mock data if nothing valid in local storage
-        const form = forms.find(f => f.id === id);
-        if (form) {
-            setPreviewForm({
-                ...form,
-                questions: form.questionsData || []
-            });
-        }
-        setIsLoading(false);
 
+        loadForm();
     }, [id]);
 
 
