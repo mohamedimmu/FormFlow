@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   DndContext,
   closestCenter,
@@ -12,8 +13,6 @@ import {
 import {
   arrayMove,
   SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -42,9 +41,22 @@ import {
   Save,
   Link as LinkIcon,
   GripVertical,
+  Loader2,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { AiFormTailorDialog } from './ai-form-tailor-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { useToast } from '@/hooks/use-toast';
 
 type QuestionType = 'short-answer' | 'paragraph' | 'multiple-choice' | 'checkboxes' | 'dropdown' | 'file-upload';
 
@@ -159,7 +171,10 @@ export function FormBuilder() {
   const [formTitle, setFormTitle] = useState('Untitled Form');
   const [formDescription, setFormDescription] = useState('');
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
+  const router = useRouter();
+  const { toast } = useToast();
   const sensors = useSensors(
     useSensor(PointerSensor)
   );
@@ -178,6 +193,23 @@ export function FormBuilder() {
 
   const getExistingQuestionsAsString = () => {
     return questions.map(q => `- ${q.title} (${q.type})`).join('\n');
+  }
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Here you would typically send the data to your backend:
+    // const formData = { title: formTitle, description: formDescription, questions };
+    // await api.createForm(formData);
+    
+    setIsSaving(false);
+    toast({
+        title: "Form Saved!",
+        description: `The form "${formTitle}" has been successfully created.`,
+    })
+    router.push('/forms');
   }
 
   function handleDragEnd(event: DragEndEvent) {
@@ -243,14 +275,36 @@ export function FormBuilder() {
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-2">
             <Button variant="outline"><Eye className="mr-2 h-4 w-4" /> Preview</Button>
-            <Button><Save className="mr-2 h-4 w-4" /> Save & Publish</Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button disabled={isSaving}>
+                  {isSaving ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                      <Save className="mr-2 h-4 w-4" />
+                  )}
+                  Save & Publish
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you ready to publish?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will create the form and make it accessible. You can still edit it later.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleSave}>Publish</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <Button variant="secondary" className="col-span-2"><LinkIcon className="mr-2 h-4 w-4" /> Share</Button>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
             <CardTitle>Question Palette</CardTitle>
-            <CardDescription>Click to add a question.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             {questionTypes.map(({ type, label, icon: Icon }) => (
@@ -267,9 +321,6 @@ export function FormBuilder() {
                     <Sparkles className="h-6 w-6 text-primary"/>
                     <CardTitle className="text-primary">AI Form Tailor</CardTitle>
                 </div>
-                <CardDescription className="text-primary/80">
-                    Get AI-powered suggestions to improve your form for your target audience.
-                </CardDescription>
             </CardHeader>
             <CardContent>
                 <Button className="w-full" onClick={() => setIsAiDialogOpen(true)}>
