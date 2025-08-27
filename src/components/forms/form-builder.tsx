@@ -251,7 +251,7 @@ export function FormBuilder({ existingForm }: FormBuilderProps) {
     } else {
         // Create a new form and add it to the mock data
         const newForm = {
-            id: (forms.length + 1).toString(),
+            id: `form_${Date.now()}`,
             ...formData,
             responses: 0,
             createdAt: new Date().toISOString().split('T')[0],
