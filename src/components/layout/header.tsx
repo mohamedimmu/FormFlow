@@ -34,7 +34,7 @@ export function Header() {
     };
 
     const getInitials = (name: string = '') => {
-        return name.split(' ').map(n => n[0]).join('').toUpperCase();
+        return name.split(' ').map(n => n[0]).join('').toUpperCase() || (user?.email?.[0] || '').toUpperCase();
     }
 
   return (
@@ -71,7 +71,7 @@ export function Header() {
             <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">{userProfile?.name || user?.email}</p>
                 <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
-                <p className="text-xs leading-none text-muted-foreground capitalize pt-1">{userProfile?.role}</p>
+                {userProfile?.role && <p className="text-xs leading-none text-muted-foreground capitalize pt-1">{userProfile?.role}</p>}
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
