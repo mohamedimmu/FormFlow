@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link"
@@ -14,7 +15,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Logo } from "@/components/icons"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, FileText, Users, LogOut, BarChart3, ListChecks } from "lucide-react"
+import { LayoutDashboard, FileText, Users, LogOut, BarChart3, ListChecks, Settings } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 
 const menuItems = [
@@ -22,6 +23,7 @@ const menuItems = [
   { href: "/form-builder", label: "Form Builder", icon: ListChecks },
   { href: "/forms", label: "Responses", icon: BarChart3 },
   { href: "/users", label: "Users", icon: Users },
+  { href: "/settings", label: "Settings", icon: Settings },
 ]
 
 export function SidebarNav() {
