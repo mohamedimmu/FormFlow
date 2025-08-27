@@ -11,21 +11,22 @@ import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function SettingsPage() {
-  const { userProfile, refreshUserProfile } = useAuth();
+  const { user, userProfile, refreshUserProfile } = useAuth();
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (userProfile) {
-      setName(userProfile.name);
+      setName(userProfile.name || '');
     }
   }, [userProfile]);
 
   const handleUpdateProfile = async () => {
-    if (!userProfile) return;
+    if (!user) return;
     setIsLoading(true);
     try {
+        // The refreshUserProfile in the hook handles the update.
         await refreshUserProfile({ name });
         toast({
             title: "Profile Updated",
@@ -65,15 +66,15 @@ export default function SettingsPage() {
                         </div>
                          <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" defaultValue={userProfile?.email} disabled />
+                            <Input id="email" type="email" value={userProfile?.email || ''} disabled />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="mobile">Mobile</Label>
-                            <Input id="mobile" defaultValue={userProfile?.mobile} disabled />
+                            <Input id="mobile" value={userProfile?.mobile || ''} disabled />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="role">Role</Label>
-                            <Input id="role" defaultValue={userProfile?.role} disabled />
+                            <Input id="role" value={userProfile?.role || ''} disabled />
                         </div>
                     </div>
                 </CardContent>
