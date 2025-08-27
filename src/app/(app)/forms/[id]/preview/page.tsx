@@ -44,10 +44,10 @@ export default function FormPreviewPage({ params }: { params: { id: string } }) 
         // Fallback to mock data if nothing valid in local storage
         const form = forms.find(f => f.id === id);
         if (form) {
-            // Use the consistent mock data source
+            // Use the consistent mock data source, but only the first 3 for this example
             setPreviewForm({
                 ...form,
-                questions: MOCK_QUESTIONS.slice(0, 5)
+                questions: MOCK_QUESTIONS.slice(0, 3) 
             });
         }
         setIsLoading(false);
