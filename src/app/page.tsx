@@ -10,13 +10,13 @@ import { Logo } from "@/components/icons"
 export default function LoginPage() {
   return (
     <div className="w-full min-h-screen lg:grid lg:grid-cols-2">
-      <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex bg-gradient-to-br from-blue-600 to-blue-900">
+      <div className="relative flex h-full flex-col bg-muted p-10 text-white bg-gradient-to-br from-blue-600 to-blue-900">
         <div className="absolute inset-0" />
         <div className="relative z-20 flex items-center text-lg font-medium">
           <Logo className="h-8 w-8 mr-2" />
           FormFlow
         </div>
-        <div className="relative z-20 mt-auto">
+        <div className="relative z-20 mt-auto hidden lg:block">
             <h1 className="text-4xl font-bold">FormFlow</h1>
             <p className="mt-2 text-lg text-blue-200">
                 Login to manage questions, share with employees, and review responses.
