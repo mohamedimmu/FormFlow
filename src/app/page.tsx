@@ -10,13 +10,13 @@ import { Logo } from "@/components/icons"
 export default function LoginPage() {
   return (
     <div className="w-full min-h-screen lg:grid lg:grid-cols-2">
-      <div className="relative flex h-full flex-col bg-muted p-10 text-white bg-gradient-to-br from-blue-600 to-blue-900">
+      <div className="relative hidden h-full flex-col bg-muted p-10 text-white bg-gradient-to-br from-blue-600 to-blue-900 lg:flex">
         <div className="absolute inset-0" />
         <div className="relative z-20 flex items-center text-lg font-medium">
           <Logo className="h-8 w-8 mr-2" />
           FormFlow
         </div>
-        <div className="relative z-20 mt-auto hidden lg:block">
+        <div className="relative z-20 mt-auto">
             <h1 className="text-4xl font-bold">FormFlow</h1>
             <p className="mt-2 text-lg text-blue-200">
                 Login to manage questions, share with employees, and review responses.
@@ -27,6 +27,12 @@ export default function LoginPage() {
       </div>
       <div className="flex items-center justify-center py-12 px-4">
         <div className="mx-auto grid w-full max-w-[350px] gap-6">
+            <div className="lg:hidden text-center mb-4">
+                <div className="inline-flex items-center text-lg font-medium">
+                    <Logo className="h-8 w-8 mr-2 text-primary" />
+                    <span className="font-semibold">FormFlow</span>
+                </div>
+            </div>
           <div className="grid gap-2 text-left">
             <h1 className="text-3xl font-bold">Login to FormFlow</h1>
           </div>
@@ -37,7 +43,7 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 placeholder="m@example.com"
-                defaultValue="javidfaaz@gmail.com"
+                defaultValue="admin@formflow.com"
                 required
               />
             </div>
