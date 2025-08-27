@@ -3,14 +3,12 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function SettingsPage() {
-  const { user, userProfile } = useAuth();
+  const { userProfile } = useAuth();
 
   return (
     <div className="space-y-6">
@@ -73,47 +71,6 @@ export default function SettingsPage() {
                 <CardFooter>
                     <Button>Change Password</Button>
                 </CardFooter>
-            </Card>
-        </div>
-        <div className="space-y-6">
-             <Card>
-                <CardHeader>
-                    <CardTitle>Preferences</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                     <div className="space-y-2">
-                        <Label htmlFor="language">Language</Label>
-                        <Select>
-                            <SelectTrigger id="language">
-                                <SelectValue placeholder="Select language" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="en">English</SelectItem>
-                                <SelectItem value="es">Spanish</SelectItem>
-                                <SelectItem value="fr">French</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="theme">Theme</Label>
-                        <Select>
-                            <SelectTrigger id="theme">
-                                <SelectValue placeholder="Select theme" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="light">Light</SelectItem>
-                                <SelectItem value="dark">Dark</SelectItem>
-                                <SelectItem value="system">System</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="flex items-center space-x-2 pt-2">
-                        <Checkbox id="marketing-emails" />
-                        <Label htmlFor="marketing-emails" className="font-normal">
-                            Receive marketing emails and updates.
-                        </Label>
-                    </div>
-                </CardContent>
             </Card>
         </div>
       </div>
