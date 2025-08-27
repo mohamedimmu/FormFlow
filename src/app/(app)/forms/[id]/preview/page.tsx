@@ -16,6 +16,7 @@ interface FormDataType {
 }
 
 export default function FormPreviewPage({ params }: { params: { id: string } }) {
+    const { id } = params;
     const [previewForm, setPreviewForm] = useState<FormDataType | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -26,7 +27,7 @@ export default function FormPreviewPage({ params }: { params: { id: string } }) 
             if (storedPreviewData) {
                 const parsedData: FormDataType = JSON.parse(storedPreviewData);
                 // Use this data if it's for the form being previewed (or a new unsaved form)
-                if (parsedData.id === params.id || params.id === 'new') {
+                if (parsedData.id === id || id === 'new') {
                     setPreviewForm(parsedData);
                     // We clear it so a normal page load doesn't accidentally pick it up again
                     localStorage.removeItem('form-preview');
@@ -41,7 +42,7 @@ export default function FormPreviewPage({ params }: { params: { id: string } }) 
         }
         
         // Fallback to mock data if nothing valid in local storage
-        const form = forms.find(f => f.id === params.id);
+        const form = forms.find(f => f.id === id);
         if (form) {
             // Use the consistent mock data source
             setPreviewForm({
@@ -51,7 +52,7 @@ export default function FormPreviewPage({ params }: { params: { id: string } }) 
         }
         setIsLoading(false);
 
-    }, [params.id]);
+    }, [id]);
 
 
     if (isLoading) {
