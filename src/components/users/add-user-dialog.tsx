@@ -65,6 +65,7 @@ export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogP
       countryCode: "+1",
       mobile: "",
       email: "",
+      role: "Employee",
     },
   });
 

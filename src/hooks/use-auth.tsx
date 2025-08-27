@@ -5,7 +5,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode, useCa
 import { onAuthStateChanged, User as FirebaseUser, signInWithEmailAndPassword, signOut, confirmPasswordReset, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
-import { User as AppUser, getUserProfile, sendInvitation as sendUserInvitation, updateUserProfile } from '@/lib/data';
+import { User as AppUser, getUserProfile, sendInvitation, updateUserProfile } from '@/lib/data';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -28,7 +28,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async (firebaseUser: FirebaseUser) => {
-    const profile = await getUserProfile(firebaseUser.uid);
+    let profile = await getUserProfile(firebaseUser.uid);
+    // If a user exists in Auth but not in Firestore, create a default profile.
+    // This can happen for the seeded admin or if Firestore creation fails.
+    if (!profile) {
+        console.log(`Profile not found for UID ${firebaseUser.uid}, creating one.`);
+        const newUserProfile: AppUser = {
+            id: firebaseUser.uid,
+            email: firebaseUser.email!,
+            name: firebaseUser.email!.split('@')[0],
+            role: 'Employee', // Default role
+            mobile: '',
+            avatar: `https://picsum.photos/seed/${firebaseUser.uid}/100/100`,
+            status: 'Active'
+        };
+        // Special case for the seeded super admin
+        if (firebaseUser.email === 'admin@formflow.com') {
+            newUserProfile.role = 'Super Admin';
+            newUserProfile.name = 'Super Admin';
+        }
+        await setDoc(doc(db, "users", firebaseUser.uid), newUserProfile);
+        profile = await getUserProfile(firebaseUser.uid);
+    }
     setUserProfile(profile);
   }, []);
 
@@ -37,7 +58,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (dataToUpdate) {
             await updateUserProfile(user.uid, dataToUpdate);
         }
-        await fetchProfile(user); // Re-fetch the profile to get the latest data
+        // Re-fetch the profile to get the latest data
+        await fetchProfile(user); 
     }
   }, [user, fetchProfile]);
 
@@ -69,7 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const sendPasswordReset = async (email: string) => {
     // This now correctly points to the invitation sender
-    await sendUserInvitation(email);
+    await sendInvitation(email);
   };
   
   const completePasswordReset = async (code: string, newPassword: string) => {
@@ -77,21 +99,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const createUser = async (userData: Omit<AppUser, 'id' | 'status'>, password_dont_use: string): Promise<AppUser> => {
+    // This function should only be responsible for creating the user in Auth.
+    // The Firestore document will be created by the onAuthStateChanged listener
+    // in the new user's own session, which is more reliable.
+    // For this flow, we'll create the user and then the document directly.
     const userCredential = await createUserWithEmailAndPassword(auth, userData.email, password_dont_use);
     const authUid = userCredential.user.uid;
 
-    const newUser: Omit<AppUser, 'id'> = {
+    const newUserDoc: AppUser = {
+        id: authUid,
         ...userData,
         status: 'Active',
     };
     
-    await setDoc(doc(db, "users", authUid), newUser);
+    await setDoc(doc(db, "users", authUid), newUserDoc);
     
-    return { ...newUser, id: authUid };
+    return newUserDoc;
   }
   
-  const sendInvitation = async (email: string) => {
-    await sendUserInvitation(email);
+  const sendInvitationToUser = async (email: string) => {
+    await sendInvitation(email);
   };
 
   const value = {
@@ -103,7 +130,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     sendPasswordReset,
     completePasswordReset,
     createUser,
-    sendInvitation,
+    sendInvitation: sendInvitationToUser,
     refreshUserProfile,
   };
 
