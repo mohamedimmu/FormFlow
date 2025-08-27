@@ -25,8 +25,8 @@ export default function LoginPage() {
         <div className="absolute bottom-0 left-0 z-10 h-64 w-64 -translate-x-1/4 translate-y-1/4 rounded-full border-2 border-blue-400/30"></div>
         <div className="absolute bottom-0 left-0 z-10 h-48 w-48 translate-x-4 translate-y-4 rounded-full border-2 border-blue-400/30"></div>
       </div>
-      <div className="flex items-center justify-center py-12">
-        <div className="mx-auto grid w-[350px] gap-6">
+      <div className="flex items-center justify-center py-12 px-4">
+        <div className="mx-auto grid w-full max-w-[350px] gap-6">
           <div className="grid gap-2 text-left">
             <h1 className="text-3xl font-bold">Login to FormFlow</h1>
           </div>
