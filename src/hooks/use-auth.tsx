@@ -32,6 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (dataToUpdate) {
             await updateUserProfile(user.uid, dataToUpdate);
         }
+        // After any potential update, fetch the latest profile data
         const profile = await getUserProfile(user.uid);
         setUserProfile(profile);
     }
@@ -79,13 +80,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const newUser: Omit<AppUser, 'id'> = {
         ...userData,
-        status: 'Pending',
+        status: 'Active', // Create the user as 'Active' directly
     };
     
+    // Use a single setDoc operation to create the user profile document
     await setDoc(doc(db, "users", authUid), newUser);
-    // After creating user, update their status to active
-    await updateDoc(doc(db, "users", authUid), { status: 'Active' });
-
+    
     return { ...newUser, id: authUid };
   }
   
