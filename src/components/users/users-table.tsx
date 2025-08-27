@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button"
 import { Eye, Pencil, Trash2 } from "lucide-react"
 import { getUsers, type User } from "@/lib/data"
 import { Skeleton } from "../ui/skeleton";
-import { Badge } from "../ui/badge";
 
 export function UsersTable() {
     const [users, setUsers] = useState<User[]>([]);

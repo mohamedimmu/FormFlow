@@ -94,6 +94,11 @@ export async function updateForm(id: string, formData: Partial<Omit<Form, 'id'>>
 
 
 // User functions
+export async function createUser(userData: Omit<User, 'id'>) {
+    const docRef = await addDoc(usersCollection, userData);
+    return docRef.id;
+}
+
 export async function getUsers(): Promise<User[]> {
     const snapshot = await getDocs(query(usersCollection, orderBy("name")));
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
