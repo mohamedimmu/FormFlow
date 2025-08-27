@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal } from "lucide-react"
+import { Eye, MoreHorizontal } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -76,6 +76,12 @@ export function RecentForms() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuItem>Edit</DropdownMenuItem>
+                       <Link href={`/forms/${form.id}/preview`}>
+                        <DropdownMenuItem>
+                          <Eye className="mr-2 h-4 w-4" />
+                          Preview
+                        </DropdownMenuItem>
+                      </Link>
                       <Link href={`/forms/${form.id}/responses`}>
                         <DropdownMenuItem>View Responses</DropdownMenuItem>
                       </Link>

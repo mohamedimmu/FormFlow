@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button"
 import {
   MoreHorizontal,
   FileDown,
+  Eye,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -110,6 +111,12 @@ export function FormsTable() {
                         <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <Link href={`/forms/${form.id}/preview`}>
+                            <DropdownMenuItem>
+                                <Eye className="mr-2 h-4 w-4" />
+                                Preview
+                            </DropdownMenuItem>
+                        </Link>
                         <Link href={`/forms/${form.id}/responses`}>
                             <DropdownMenuItem>View Responses</DropdownMenuItem>
                         </Link>
