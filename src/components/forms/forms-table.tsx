@@ -23,6 +23,8 @@ import {
   MoreHorizontal,
   FileDown,
   Eye,
+  CheckCircle,
+  XCircle,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -32,29 +34,54 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuCheckboxItem,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu"
 import {
   Tabs,
   TabsList,
   TabsTrigger
 } from "@/components/ui/tabs"
-import { getForms, type Form } from "@/lib/data"
+import { getForms, updateForm, type Form } from "@/lib/data"
 import { Skeleton } from "../ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 export function FormsTable() {
   const [allForms, setAllForms] = useState<Form[]>([]);
   const [activeTab, setActiveTab] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  async function loadForms() {
+    setIsLoading(true);
+    const formsFromDb = await getForms();
+    setAllForms(formsFromDb);
+    setIsLoading(false);
+  }
 
   useEffect(() => {
-    async function loadForms() {
-      setIsLoading(true);
-      const formsFromDb = await getForms();
-      setAllForms(formsFromDb);
-      setIsLoading(false);
-    }
     loadForms();
   }, []);
+
+  const handleStatusChange = async (formId: string, newStatus: 'Active' | 'Inactive') => {
+    try {
+        await updateForm(formId, { status: newStatus });
+        toast({
+            title: "Status Updated",
+            description: `Form status has been changed to ${newStatus}.`,
+        });
+        // Refresh the forms list
+        loadForms();
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to update form status.",
+        });
+    }
+  }
 
   const filteredForms = allForms.filter(form => {
     if (activeTab === 'all') return true;
@@ -160,6 +187,24 @@ export function FormsTable() {
                               <DropdownMenuItem>View Responses</DropdownMenuItem>
                           </Link>
                           <DropdownMenuItem>Share</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>
+                                <span>Change Status</span>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuItem onClick={() => handleStatusChange(form.id, 'Active')}>
+                                        <CheckCircle className="mr-2 h-4 w-4" />
+                                        Active
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleStatusChange(form.id, 'Inactive')}>
+                                        <XCircle className="mr-2 h-4 w-4" />
+                                        Inactive
+                                    </DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                          </DropdownMenuSub>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
                           </DropdownMenuContent>
