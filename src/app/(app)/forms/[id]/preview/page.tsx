@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { notFound } from 'next/navigation';
 import { FormDisplay } from "@/components/forms/form-display";
-import { forms, MOCK_QUESTIONS } from "@/lib/data";
+import { forms } from "@/lib/data";
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Question } from '@/components/forms/form-builder';
 
@@ -44,10 +44,9 @@ export default function FormPreviewPage({ params }: { params: { id: string } }) 
         // Fallback to mock data if nothing valid in local storage
         const form = forms.find(f => f.id === id);
         if (form) {
-            // Use the consistent mock data source, but only the first 3 for this example
             setPreviewForm({
                 ...form,
-                questions: MOCK_QUESTIONS.slice(0, 3) 
+                questions: form.questionsData || []
             });
         }
         setIsLoading(false);

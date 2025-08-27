@@ -1,3 +1,5 @@
+import type { Question } from "@/components/forms/form-builder";
+
 export type Form = {
   id: string;
   name: string;
@@ -6,6 +8,7 @@ export type Form = {
   responses: number;
   createdAt: string;
   status: 'Active' | 'Inactive';
+  questionsData?: Question[];
 };
 
 export const forms: Form[] = [
@@ -17,42 +20,69 @@ export const forms: Form[] = [
     responses: 128,
     createdAt: '2023-10-26',
     status: 'Active',
+    questionsData: [
+        { id: 1, type: 'multiple-choice', title: 'How satisfied are you with your recent purchase?', required: true, options: ['Very Satisfied', 'Satisfied', 'Neutral', 'Unsatisfied', 'Very Unsatisfied'] },
+        { id: 2, type: 'short-answer', title: 'Which product did you purchase?', required: true },
+        { id: 3, type: 'paragraph', title: 'Do you have any suggestions for improvement?', required: false },
+        { id: 4, type: 'dropdown', title: 'How did you hear about us?', required: false, options: ['Social Media', 'Friend or Family', 'Advertisement', 'Search Engine'] },
+        { id: 5, type: 'checkboxes', title: 'Which features do you use the most?', required: false, options: ['Feature A', 'Feature B', 'Feature C'] },
+    ]
   },
   {
     id: '2',
     name: 'Employee Engagement Poll',
     description: 'Monthly check-in with the team.',
-    questions: 8,
+    questions: 4,
     responses: 45,
     createdAt: '2023-10-20',
     status: 'Active',
+    questionsData: [
+        { id: 1, type: 'short-answer', title: 'What is your name? (Optional)', required: false },
+        { id: 2, type: 'paragraph', title: 'What went well this month?', required: true },
+        { id: 3, type: 'paragraph', title: 'What could be improved?', required: true },
+        { id: 4, type: 'dropdown', title: 'Overall, how are you feeling?', required: true, options: ['Great', 'Good', 'Okay', 'Not great'] },
+    ]
   },
   {
     id: '3',
     name: 'Q3 Product Feedback',
     description: 'Feedback on the new feature releases in Q3.',
-    questions: 12,
+    questions: 3,
     responses: 302,
     createdAt: '2023-09-15',
     status: 'Inactive',
+    questionsData: [
+        { id: 1, type: 'multiple-choice', title: 'Have you used the new "Analytics Dashboard" feature?', required: true, options: ['Yes', 'No'] },
+        { id: 2, type: 'paragraph', title: 'If yes, what are your thoughts on the new Analytics Dashboard?', required: false },
+        { id: 3, type: 'short-answer', title: 'What is one feature you would like to see added?', required: false },
+    ]
   },
   {
     id: '4',
     name: 'Website Usability Test',
     description: 'How easy is it to use our new website?',
-    questions: 7,
+    questions: 2,
     responses: 76,
     createdAt: '2023-09-01',
     status: 'Active',
+    questionsData: [
+        { id: 1, type: 'short-answer', title: 'Were you able to find what you were looking for?', required: true },
+        { id: 2, type: 'paragraph', title: 'Please describe your overall experience.', required: true },
+    ]
   },
   {
     id: '5',
     name: 'New Hire Onboarding Feedback',
     description: 'Feedback from new hires on the onboarding process.',
-    questions: 10,
+    questions: 3,
     responses: 12,
     createdAt: '2023-08-22',
     status: 'Inactive',
+    questionsData: [
+        { id: 1, type: 'dropdown', title: 'How would you rate the onboarding process?', required: true, options: ['Excellent', 'Good', 'Average', 'Poor'] },
+        { id: 2, type: 'paragraph', title: 'What was the most helpful part of onboarding?', required: false },
+        { id: 3, type: 'paragraph', title: 'What could be improved in the onboarding process?', required: false },
+    ]
   },
 ];
 
@@ -120,8 +150,6 @@ export const responses: FormResponse[] = [
     { id: 'resp3', submittedAt: '2023-10-27T10:10:00Z', q1: 'Neutral', q2: 'It\'s okay', q3: '7' },
     { id: 'resp4', submittedAt: '2023-10-27T11:20:00Z', q1: 'Very Satisfied', q2: 'Excellent customer support!', q3: '9' },
 ];
-
-import type { Question } from "@/components/forms/form-builder";
 
 export const MOCK_QUESTIONS: Question[] = [
     { id: 1, type: 'short-answer', title: 'What is your name?', required: true, options: [] },
