@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from "react";
 import Link from "next/link"
 import {
   Card,
@@ -25,10 +28,17 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { forms } from "@/lib/data"
+import { forms, type Form } from "@/lib/data"
 
 export function RecentForms() {
-  const recentForms = forms.slice(0, 5)
+  const [recentForms, setRecentForms] = useState<Form[]>([]);
+
+  useEffect(() => {
+    // In a real app, you might refetch data here.
+    // For our mock data, we just need to make sure we have the latest version from the imported array.
+    // We slice to get a new array to trigger a state update if the parent component re-renders.
+    setRecentForms(forms.slice(0, 5));
+  }, []); // Re-evaluates if `forms` array reference changes, which it does on add/edit.
 
   return (
     <Card>
