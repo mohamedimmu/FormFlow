@@ -117,19 +117,6 @@ export async function updateForm(id: string, formData: Partial<Omit<Form, 'id'>>
 
 
 // User functions
-export async function createUser(userData: Omit<User, 'id' | 'status'>, password_dont_use: string): Promise<User> {
-    const userCredential = await createUserWithEmailAndPassword(auth, userData.email, password_dont_use);
-    const authUid = userCredential.user.uid;
-
-    const newUser: Omit<User, 'id'> = {
-        ...userData,
-        status: 'Pending',
-    };
-    
-    await setDoc(doc(usersCollection, authUid), newUser);
-    return { ...newUser, id: authUid };
-}
-
 export async function getUserProfile(uid: string): Promise<User | null> {
     const docRef = doc(db, "users", uid);
     const docSnap = await getDoc(docRef);

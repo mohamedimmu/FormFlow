@@ -4,7 +4,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { onAuthStateChanged, User as FirebaseUser, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, confirmPasswordReset, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { doc, getDoc, getDocs, query, collection, limit, setDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { User as AppUser, getUserProfile, sendInvitation as sendUserInvitation } from '@/lib/data';
 
 interface AuthContextType {
@@ -54,6 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const sendPasswordReset = async (email: string) => {
+    // This now correctly points to the invitation sender
     await sendUserInvitation(email);
   };
   
@@ -71,6 +72,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
     
     await setDoc(doc(db, "users", authUid), newUser);
+    // After creating user, update their status to active
+    await updateDoc(doc(db, "users", authUid), { status: 'Active' });
+
     return { ...newUser, id: authUid };
   }
   
