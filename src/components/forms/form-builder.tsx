@@ -2,11 +2,25 @@
 
 import { useState } from 'react';
 import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
   CardFooter
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,7 +40,8 @@ import {
   Sparkles,
   Eye,
   Save,
-  Link as LinkIcon
+  Link as LinkIcon,
+  GripVertical,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { AiFormTailorDialog } from './ai-form-tailor-dialog';
@@ -50,75 +65,92 @@ const questionTypes = [
   { type: 'file-upload', label: 'File Upload', icon: Upload },
 ];
 
-const QuestionRenderer = ({ question, onRemove, onUpdate }: { question: Question; onRemove: (id: number) => void; onUpdate: (id: number, updatedQuestion: Partial<Question>) => void }) => {
-  const Icon = questionTypes.find(q => q.type === question.type)?.icon || Type;
+const SortableQuestion = ({ question, onRemove, onUpdate }: { question: Question; onRemove: (id: number) => void; onUpdate: (id: number, updatedQuestion: Partial<Question>) => void }) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+    } = useSortable({id: question.id});
+    
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+
+    const Icon = questionTypes.find(q => q.type === question.type)?.icon || Type;
 
   return (
-    <Card className="bg-background">
-      <CardContent className="p-4">
-        <div className="flex items-start gap-4">
-          <Icon className="h-5 w-5 text-muted-foreground mt-1" />
-          <div className="flex-1 space-y-2">
-            <Input 
-              placeholder="Question Title" 
-              className="text-base font-semibold border-0 shadow-none px-0 focus-visible:ring-0" 
-              value={question.title}
-              onChange={(e) => onUpdate(question.id, { title: e.target.value })}
-            />
-            {question.type === 'short-answer' && <Input placeholder="Short answer text" disabled />}
-            {question.type === 'paragraph' && <Textarea placeholder="Long answer text" disabled />}
-            {(question.type === 'multiple-choice' || question.type === 'checkboxes' || question.type === 'dropdown') && (
-              <div className="space-y-2">
-                {(question.options || ['Option 1']).map((option, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    {question.type === 'multiple-choice' && <div className="h-4 w-4 rounded-full border border-muted-foreground" />}
-                    {question.type === 'checkboxes' && <div className="h-4 w-4 rounded-sm border border-muted-foreground" />}
+    <div ref={setNodeRef} style={style} >
+        <Card className="bg-background mb-4">
+            <CardContent className="p-4">
+                <div className="flex items-start gap-4">
+                <div {...attributes} {...listeners} className="cursor-move pt-1">
+                    <GripVertical className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="flex-1 space-y-2">
                     <Input 
-                      placeholder={`Option ${index + 1}`} 
-                      className="border-0 shadow-none px-0 focus-visible:ring-0"
-                      value={option}
-                      onChange={(e) => {
-                        const newOptions = [...(question.options || ['Option 1'])];
-                        newOptions[index] = e.target.value;
-                        onUpdate(question.id, { options: newOptions });
-                      }}
+                    placeholder="Question Title" 
+                    className="text-base font-semibold border-0 shadow-none px-0 focus-visible:ring-0" 
+                    value={question.title}
+                    onChange={(e) => onUpdate(question.id, { title: e.target.value })}
                     />
-                    {question.options && question.options.length > 1 && (
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
-                        const newOptions = question.options?.filter((_, i) => i !== index);
+                    {question.type === 'short-answer' && <Input placeholder="Short answer text" disabled />}
+                    {question.type === 'paragraph' && <Textarea placeholder="Long answer text" disabled />}
+                    {(question.type === 'multiple-choice' || question.type === 'checkboxes' || question.type === 'dropdown') && (
+                    <div className="space-y-2">
+                        {(question.options || ['Option 1']).map((option, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                            {question.type === 'multiple-choice' && <div className="h-4 w-4 rounded-full border border-muted-foreground" />}
+                            {question.type === 'checkboxes' && <div className="h-4 w-4 rounded-sm border border-muted-foreground" />}
+                            <Input 
+                            placeholder={`Option ${index + 1}`} 
+                            className="border-0 shadow-none px-0 focus-visible:ring-0"
+                            value={option}
+                            onChange={(e) => {
+                                const newOptions = [...(question.options || ['Option 1'])];
+                                newOptions[index] = e.target.value;
+                                onUpdate(question.id, { options: newOptions });
+                            }}
+                            />
+                            {question.options && question.options.length > 1 && (
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
+                                const newOptions = question.options?.filter((_, i) => i !== index);
+                                onUpdate(question.id, { options: newOptions });
+                            }}>
+                                <Trash2 className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                            )}
+                        </div>
+                        ))}
+                        <Button variant="link" className="p-0 h-auto" onClick={() => {
+                        const newOptions = [...(question.options || ['Option 1']), `Option ${(question.options?.length || 1) + 1}`];
                         onUpdate(question.id, { options: newOptions });
-                      }}>
-                        <Trash2 className="h-4 w-4 text-muted-foreground" />
-                      </Button>
+                        }}>Add option</Button>
+                    </div>
                     )}
-                  </div>
-                ))}
-                <Button variant="link" className="p-0 h-auto" onClick={() => {
-                  const newOptions = [...(question.options || ['Option 1']), `Option ${(question.options?.length || 1) + 1}`];
-                  onUpdate(question.id, { options: newOptions });
-                }}>Add option</Button>
-              </div>
-            )}
-            {question.type === 'file-upload' && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground p-2 border-dashed border-2 rounded-md">
-                <Upload className="h-4 w-4" />
-                <span>File upload input</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-end gap-4 p-2 border-t">
-        <div className="flex items-center gap-2">
-            <Switch id={`required-${question.id}`} checked={question.required} onCheckedChange={(checked) => onUpdate(question.id, { required: checked })} />
-            <Label htmlFor={`required-${question.id}`}>Required</Label>
-        </div>
-        <Separator orientation="vertical" className="h-6" />
-        <Button variant="ghost" size="icon" onClick={() => onRemove(question.id)}>
-          <Trash2 className="h-4 w-4 text-destructive" />
-        </Button>
-      </CardFooter>
-    </Card>
+                    {question.type === 'file-upload' && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground p-2 border-dashed border-2 rounded-md">
+                        <Upload className="h-4 w-4" />
+                        <span>File upload input</span>
+                    </div>
+                    )}
+                </div>
+                </div>
+            </CardContent>
+            <CardFooter className="flex justify-end gap-4 p-2 border-t">
+                <div className="flex items-center gap-2">
+                    <Switch id={`required-${question.id}`} checked={question.required} onCheckedChange={(checked) => onUpdate(question.id, { required: checked })} />
+                    <Label htmlFor={`required-${question.id}`}>Required</Label>
+                </div>
+                <Separator orientation="vertical" className="h-6" />
+                <Button variant="ghost" size="icon" onClick={() => onRemove(question.id)}>
+                <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+            </CardFooter>
+        </Card>
+    </div>
   );
 };
 
@@ -127,6 +159,10 @@ export function FormBuilder() {
   const [formTitle, setFormTitle] = useState('Untitled Form');
   const [formDescription, setFormDescription] = useState('');
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor)
+  );
 
   const addQuestion = (type: QuestionType) => {
     setQuestions([...questions, { id: Date.now(), type, title: '', required: false, options: ['Option 1'] }]);
@@ -144,11 +180,24 @@ export function FormBuilder() {
     return questions.map(q => `- ${q.title} (${q.type})`).join('\n');
   }
 
+  function handleDragEnd(event: DragEndEvent) {
+    const {active, over} = event;
+    
+    if (over && active.id !== over.id) {
+      setQuestions((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
       <div className="lg:col-span-2 space-y-6">
         <Card>
-            <CardHeader>
+            <CardHeader className="p-4">
                 <Input 
                     placeholder="Form Title"
                     value={formTitle}
@@ -163,16 +212,28 @@ export function FormBuilder() {
                 />
             </CardHeader>
         </Card>
+        <DndContext 
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+        >
+            <SortableContext 
+                items={questions}
+                strategy={verticalListSortingStrategy}
+            >
+                {questions.map((q) => (
+                    <SortableQuestion key={q.id} question={q} onRemove={removeQuestion} onUpdate={updateQuestion} />
+                ))}
+            </SortableContext>
+        </DndContext>
         
-        {questions.map((q) => (
-          <QuestionRenderer key={q.id} question={q} onRemove={removeQuestion} onUpdate={updateQuestion} />
-        ))}
-        
-        <Card className="text-center">
-            <CardContent className="p-6">
-                <p className="text-muted-foreground">Add a new question to your form</p>
-            </CardContent>
-        </Card>
+        {questions.length === 0 && (
+            <Card className="text-center">
+                <CardContent className="p-6">
+                    <p className="text-muted-foreground">Add a new question to your form</p>
+                </CardContent>
+            </Card>
+        )}
 
       </div>
       <div className="lg:sticky lg:top-24 space-y-4">
