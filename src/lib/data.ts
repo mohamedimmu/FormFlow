@@ -36,27 +36,22 @@ const responsesCollection = collection(db, "responses");
 
 // Seeding function for initial data
 export async function seedInitialData() {
-    const formsSnapshot = await getDocs(query(formsCollection, limit(1)));
-    if (formsSnapshot.empty) {
-        const batch = writeBatch(db);
-        const usersToSeed: Omit<User, 'id'>[] = [
-            { name: 'Alice Johnson', email: 'alice.j@example.com', mobile: '123-456-7890', role: 'Admin', avatar: '/avatars/01.png' },
-            { name: 'Bob Williams', email: 'bob.w@example.com', mobile: '234-567-8901', role: 'Employee', avatar: '/avatars/02.png' },
-            { name: 'Charlie Brown', email: 'charlie.b@example.com', mobile: '345-678-9012', role: 'Employee', avatar: '/avatars/03.png' },
-            { name: 'Diana Prince', email: 'diana.p@example.com', mobile: '456-789-0123', role: 'Super Admin', avatar: '/avatars/04.png' },
-            { name: 'Ethan Hunt', email: 'ethan.h@example.com', mobile: '567-890-1234', role: 'Admin', avatar: '/avatars/05.png' },
-        ];
-        usersToSeed.forEach(user => {
-            const docRef = doc(usersCollection);
-            batch.set(docRef, user);
+    const usersSnapshot = await getDocs(query(usersCollection, limit(1)));
+    if (usersSnapshot.empty) {
+        console.log("No users found. Seeding default super admin...");
+        await createUser({
+            name: 'Super Admin',
+            email: 'admin@formflow.com',
+            mobile: '+1 123-456-7890',
+            role: 'Super Admin',
+            avatar: 'https://picsum.photos/seed/admin/100/100'
         });
-        await batch.commit();
-        console.log("Seeded users data.");
+        console.log("Default super admin created.");
     }
 }
 
-// Call seeding function - this might be better placed in a startup script
-// seedInitialData();
+// Call seeding function on startup
+seedInitialData();
 
 
 // Form functions
