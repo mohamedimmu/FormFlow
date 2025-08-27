@@ -14,19 +14,27 @@ import { Eye, Pencil, Trash2 } from "lucide-react"
 import { getUsers, type User } from "@/lib/data"
 import { Skeleton } from "../ui/skeleton";
 
-export function UsersTable() {
-    const [users, setUsers] = useState<User[]>([]);
+const USERS_PER_PAGE = 10;
+
+export function UsersTable({ refreshKey }: { refreshKey: number }) {
+    const [allUsers, setAllUsers] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
 
     useEffect(() => {
         async function loadUsers() {
             setIsLoading(true);
             const data = await getUsers();
-            setUsers(data);
+            setAllUsers(data);
             setIsLoading(false);
         }
         loadUsers();
-    }, []);
+    }, [refreshKey]);
+
+    const totalPages = Math.ceil(allUsers.length / USERS_PER_PAGE);
+    const startIndex = (currentPage - 1) * USERS_PER_PAGE;
+    const endIndex = startIndex + USERS_PER_PAGE;
+    const currentUsers = allUsers.slice(startIndex, endIndex);
 
     const getRoleClassName = (role: 'Employee' | 'Admin' | 'Super Admin') => {
         switch (role) {
@@ -35,6 +43,14 @@ export function UsersTable() {
             case 'Employee': return 'text-red-600';
             default: return 'text-muted-foreground';
         }
+    }
+
+    const handlePreviousPage = () => {
+        setCurrentPage(prev => Math.max(prev - 1, 1));
+    }
+    
+    const handleNextPage = () => {
+        setCurrentPage(prev => Math.min(prev + 1, totalPages));
     }
 
   return (
@@ -63,8 +79,8 @@ export function UsersTable() {
                   <TableCell><Skeleton className="h-8 w-24" /></TableCell>
                 </TableRow>
               ))
-            ) : users.length > 0 ? (
-              users.map((user) => (
+            ) : currentUsers.length > 0 ? (
+              currentUsers.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">#{user.id.substring(0, 5)}</TableCell>
                   <TableCell>{user.name}</TableCell>
@@ -100,22 +116,31 @@ export function UsersTable() {
           </TableBody>
         </Table>
       </div>
-      {users.length > 0 && (
+      {totalPages > 1 && (
         <div className="flex items-center justify-between py-4">
           <div className="text-sm text-muted-foreground">
-            Showing 1-{users.length} of {users.length} Users
+            Showing {startIndex + 1}-{Math.min(endIndex, allUsers.length)} of {allUsers.length} Users
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" disabled={users.length === 0}>Previous</Button>
-            <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-8 w-8">1</Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8">2</Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8">3</Button>
-              <span>...</span>
-              <Button variant="ghost" size="icon" className="h-8 w-8">8</Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8">9</Button>
-            </div>
-            <Button variant="outline" size="sm" disabled={users.length === 0}>Next</Button>
+            <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handlePreviousPage}
+                disabled={currentPage === 1}
+            >
+                Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+                Page {currentPage} of {totalPages}
+            </span>
+            <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+            >
+                Next
+            </Button>
           </div>
         </div>
       )}

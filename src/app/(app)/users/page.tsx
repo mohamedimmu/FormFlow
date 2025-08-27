@@ -37,7 +37,7 @@ export default function UsersPage() {
               className="w-full appearance-none bg-background pl-8 md:w-1/3"
             />
           </div>
-          <UsersTable key={refreshKey} />
+          <UsersTable refreshKey={refreshKey} />
         </div>
       </div>
       <AddUserDialog 
