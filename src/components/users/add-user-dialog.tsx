@@ -40,7 +40,7 @@ const userSchema = z.object({
   countryCode: z.string(),
   mobile: z.string().min(5, { message: "Please enter a valid mobile number." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
-  role: z.enum(['Employee', 'Admin'], {
+  role: z.enum(['Employee', 'Admin', 'Super Admin'], {
     required_error: "You need to select a user type.",
   }),
 });
@@ -147,7 +147,7 @@ export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogP
                         control={form.control}
                         name="countryCode"
                         render={({ field }) => (
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValuechange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
                                     <SelectTrigger className="w-[120px]">
                                         <SelectValue placeholder="Code" />
