@@ -11,7 +11,7 @@ import { Header } from '@/components/layout/header';
 import { Logo } from '@/components/icons';
 
 function AuthGuard({ children }: { children: ReactNode }) {
-    const { user, loading, userProfile } = useAuth();
+    const { user, loading } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
@@ -20,8 +20,7 @@ function AuthGuard({ children }: { children: ReactNode }) {
         }
     }, [user, loading, router]);
 
-    // Now we also wait for userProfile to be loaded for an authenticated user
-    if (loading || !user || !userProfile) {
+    if (loading || !user) {
         return (
             <div className="flex min-h-screen w-full items-center justify-center bg-background">
                 <div className="flex flex-col items-center gap-4">
