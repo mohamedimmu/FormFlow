@@ -197,7 +197,7 @@ export function FormBuilder({ existingForm }: FormBuilderProps) {
     if (existingForm) {
       setFormTitle(existingForm.name);
       setFormDescription(existingForm.description);
-      setQuestions(existingForm.questions);
+      setQuestions(existingForm.questions || []);
     }
   }, [existingForm]);
 
