@@ -23,6 +23,7 @@ import {
   CardHeader,
   CardFooter,
   CardTitle,
+  CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -177,7 +178,7 @@ const SortableQuestion = ({ question, onRemove, onUpdate }: { question: Question
 
 export function FormBuilder({ existingForm }: FormBuilderProps) {
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [formTitle, setFormTitle] = useState('Untitled Form');
+  const [formTitle, setFormTitle] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -277,120 +278,135 @@ export function FormBuilder({ existingForm }: FormBuilderProps) {
     }
   }
   
-  const pageTitle = existingForm ? `Editing "${existingForm.name}"` : "Create a New Form";
+  const pageTitle = existingForm ? `Editing "${existingForm.name}"` : "Form Builder";
+  const pageDescription = existingForm ? "Edit and customize your form" : "Create and customize your form"
   const saveButtonText = existingForm ? "Update Form" : "Save & Publish";
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-      <div className="lg:col-span-2 space-y-6">
-        <h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1>
-        <Card>
-            <CardHeader className="p-4">
-                <Input 
-                    placeholder="Form Title"
-                    value={formTitle}
-                    onChange={(e) => setFormTitle(e.target.value)}
-                    className="text-2xl font-bold border-0 shadow-none -ml-2 w-[calc(100%+0.5rem)] focus-visible:ring-1"
-                />
-                <Textarea 
-                    placeholder="Form Description"
-                    value={formDescription}
-                    onChange={(e) => setFormDescription(e.target.value)}
-                    className="border-0 shadow-none -ml-2 w-[calc(100%+0.5rem)] focus-visible:ring-1"
-                />
-            </CardHeader>
-        </Card>
-        <DndContext 
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-        >
-            <SortableContext 
-                items={questions}
-                strategy={verticalListSortingStrategy}
-            >
-                {questions.map((q) => (
-                    <SortableQuestion key={q.id} question={q} onRemove={removeQuestion} onUpdate={updateQuestion} />
-                ))}
-            </SortableContext>
-        </DndContext>
-        
-        {questions.length === 0 && (
-            <Card className="text-center">
-                <CardContent className="p-6">
-                    <p className="text-muted-foreground">Add a new question to your form</p>
-                </CardContent>
-            </Card>
-        )}
-
-      </div>
-      <div className="lg:sticky lg:top-24 space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Form Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-2">
-            <Button variant="outline" onClick={handlePreview}><Eye className="mr-2 h-4 w-4" /> Preview</Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button disabled={isSaving}>
-                  {isSaving ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                      <Save className="mr-2 h-4 w-4" />
-                  )}
-                  {saveButtonText}
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you ready to publish?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will save the changes and make them accessible. You can still edit it later.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleSave}>Publish</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-            <Button variant="secondary" className="col-span-2"><LinkIcon className="mr-2 h-4 w-4" /> Share</Button>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Question Palette</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {questionTypes.map(({ type, label, icon: Icon }) => (
-              <Button key={type} variant="outline" className="w-full justify-start" onClick={() => addQuestion(type)}>
-                <Icon className="mr-2 h-4 w-4" />
-                {label}
-              </Button>
-            ))}
-          </CardContent>
-        </Card>
-        <Card className="bg-primary/10 border-primary/40">
-            <CardHeader>
-                <div className="flex items-center gap-2">
-                    <Sparkles className="h-6 w-6 text-primary"/>
-                    <CardTitle className="text-primary">AI Form Tailor</CardTitle>
+    <div className="space-y-6">
+        <div>
+            <h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1>
+            <p className="text-muted-foreground">{pageDescription}</p>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div className="lg:col-span-1 space-y-4 lg:sticky lg:top-24">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Question Types</CardTitle>
+                        <CardDescription>Drag or Click to add questions</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                        {questionTypes.map(({ type, label, icon: Icon }) => (
+                        <Button key={type} variant="outline" className="w-full justify-start" onClick={() => addQuestion(type)}>
+                            <Icon className="mr-2 h-4 w-4" />
+                            {label}
+                        </Button>
+                        ))}
+                    </CardContent>
+                </Card>
+                <Card className="bg-primary/10 border-primary/40">
+                    <CardHeader>
+                        <div className="flex items-center gap-2">
+                            <Sparkles className="h-6 w-6 text-primary"/>
+                            <CardTitle className="text-primary">AI Form Tailor</CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <Button className="w-full" onClick={() => setIsAiDialogOpen(true)}>
+                            <Sparkles className="mr-2 h-4 w-4" />
+                            Tailor with AI
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+            <div className="lg:col-span-2 space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Form Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className='space-y-2'>
+                            <Label htmlFor='form-title'>Form Title *</Label>
+                            <Input 
+                                id="form-title"
+                                placeholder="Enter form title"
+                                value={formTitle}
+                                onChange={(e) => setFormTitle(e.target.value)}
+                            />
+                        </div>
+                         <div className='space-y-2'>
+                            <Label htmlFor='form-description'>Description</Label>
+                            <Textarea 
+                                id="form-description"
+                                placeholder="Enter form description"
+                                value={formDescription}
+                                onChange={(e) => setFormDescription(e.target.value)}
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Questions ({questions.length})</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <DndContext 
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
+                        >
+                            <SortableContext 
+                                items={questions}
+                                strategy={verticalListSortingStrategy}
+                            >
+                                {questions.map((q) => (
+                                    <SortableQuestion key={q.id} question={q} onRemove={removeQuestion} onUpdate={updateQuestion} />
+                                ))}
+                            </SortableContext>
+                        </DndContext>
+                        
+                        {questions.length === 0 && (
+                            <div className="text-center py-12">
+                                <p className="text-muted-foreground">No questions added yet.</p>
+                                <p className="text-sm text-muted-foreground">Use the question types panel to add questions.</p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+                <div className='flex justify-end gap-2'>
+                    <Button variant="outline" onClick={handlePreview}>Preview Form</Button>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button disabled={isSaving}>
+                            {isSaving ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Save className="mr-2 h-4 w-4" />
+                            )}
+                            {saveButtonText}
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                            <AlertDialogTitle>Are you ready to publish?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This will save the changes and make them accessible. You can still edit it later.
+                            </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleSave}>Publish</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
-            </CardHeader>
-            <CardContent>
-                <Button className="w-full" onClick={() => setIsAiDialogOpen(true)}>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Tailor with AI
-                </Button>
-            </CardContent>
-        </Card>
-      </div>
-      <AiFormTailorDialog
-        isOpen={isAiDialogOpen}
-        setIsOpen={setIsAiDialogOpen}
-        existingQuestions={getExistingQuestionsAsString()}
-      />
+            </div>
+        </div>
+        <AiFormTailorDialog
+            isOpen={isAiDialogOpen}
+            setIsOpen={setIsAiDialogOpen}
+            existingQuestions={getExistingQuestionsAsString()}
+        />
     </div>
   );
 }

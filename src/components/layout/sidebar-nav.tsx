@@ -14,12 +14,12 @@ import {
 } from "@/components/ui/sidebar"
 import { Logo } from "@/components/icons"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, FileText, Users, LogOut } from "lucide-react"
+import { LayoutDashboard, FileText, Users, LogOut, BarChart3, ListChecks } from "lucide-react"
 
 const menuItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/forms", label: "Forms", icon: FileText },
-  { href: "/users", label: "Users", icon: Users },
+  { href: "/form-builder", label: "Form Builder", icon: ListChecks },
+  { href: "/forms", label: "Responses", icon: BarChart3 },
 ]
 
 export function SidebarNav() {
