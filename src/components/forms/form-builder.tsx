@@ -60,9 +60,9 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
 
-type QuestionType = 'short-answer' | 'paragraph' | 'multiple-choice' | 'checkboxes' | 'dropdown' | 'file-upload';
+export type QuestionType = 'short-answer' | 'paragraph' | 'multiple-choice' | 'checkboxes' | 'dropdown' | 'file-upload';
 
-interface Question {
+export interface Question {
   id: number;
   type: QuestionType;
   title: string;
@@ -70,7 +70,7 @@ interface Question {
   options?: string[];
 }
 
-interface ExistingForm {
+export interface ExistingForm {
     id: string;
     name: string;
     description: string;
@@ -215,6 +215,19 @@ export function FormBuilder({ existingForm }: FormBuilderProps) {
   const getExistingQuestionsAsString = () => {
     return questions.map(q => `- ${q.title} (${q.type})`).join('\n');
   }
+  
+  const handlePreview = () => {
+    const formData = {
+      id: existingForm?.id || 'new',
+      name: formTitle,
+      description: formDescription,
+      questions: questions
+    };
+    localStorage.setItem('form-preview', JSON.stringify(formData));
+    
+    const previewUrl = `/forms/${formData.id}/preview`;
+    window.open(previewUrl, '_blank');
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -303,7 +316,7 @@ export function FormBuilder({ existingForm }: FormBuilderProps) {
             <CardTitle>Form Actions</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-2">
-            <Button variant="outline"><Eye className="mr-2 h-4 w-4" /> Preview</Button>
+            <Button variant="outline" onClick={handlePreview}><Eye className="mr-2 h-4 w-4" /> Preview</Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button disabled={isSaving}>
