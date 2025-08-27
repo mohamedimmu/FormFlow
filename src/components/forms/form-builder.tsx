@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   DndContext,
@@ -68,6 +68,17 @@ interface Question {
   title: string;
   required: boolean;
   options?: string[];
+}
+
+interface ExistingForm {
+    id: string;
+    name: string;
+    description: string;
+    questions: Question[];
+}
+
+interface FormBuilderProps {
+    existingForm?: ExistingForm;
 }
 
 const questionTypes = [
@@ -168,18 +179,26 @@ const SortableQuestion = ({ question, onRemove, onUpdate }: { question: Question
   );
 };
 
-export function FormBuilder() {
+export function FormBuilder({ existingForm }: FormBuilderProps) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [formTitle, setFormTitle] = useState('Untitled Form');
   const [formDescription, setFormDescription] = useState('');
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-
+  
   const router = useRouter();
   const { toast } = useToast();
   const sensors = useSensors(
     useSensor(PointerSensor)
   );
+  
+  useEffect(() => {
+    if (existingForm) {
+      setFormTitle(existingForm.name);
+      setFormDescription(existingForm.description);
+      setQuestions(existingForm.questions);
+    }
+  }, [existingForm]);
 
   const addQuestion = (type: QuestionType) => {
     setQuestions([...questions, { id: Date.now(), type, title: '', required: false, options: ['Option 1'] }]);
@@ -203,13 +222,17 @@ export function FormBuilder() {
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     // Here you would typically send the data to your backend:
-    // const formData = { title: formTitle, description: formDescription, questions };
-    // await api.createForm(formData);
+    // const formData = { id: existingForm?.id, title: formTitle, description: formDescription, questions };
+    // if (existingForm) {
+    //   await api.updateForm(formData);
+    // } else {
+    //   await api.createForm(formData);
+    // }
     
     setIsSaving(false);
     toast({
-        title: "Form Saved!",
-        description: `The form "${formTitle}" has been successfully created.`,
+        title: `Form ${existingForm ? 'Updated' : 'Saved'}!`,
+        description: `The form "${formTitle}" has been successfully ${existingForm ? 'updated' : 'created'}.`,
     })
     router.push('/forms');
   }
@@ -226,10 +249,14 @@ export function FormBuilder() {
       });
     }
   }
+  
+  const pageTitle = existingForm ? `Editing "${existingForm.name}"` : "Create a New Form";
+  const saveButtonText = existingForm ? "Update Form" : "Save & Publish";
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
       <div className="lg:col-span-2 space-y-6">
+        <h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1>
         <Card>
             <CardHeader className="p-4">
                 <Input 
@@ -285,14 +312,14 @@ export function FormBuilder() {
                   ) : (
                       <Save className="mr-2 h-4 w-4" />
                   )}
-                  Save & Publish
+                  {saveButtonText}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you ready to publish?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will create the form and make it accessible. You can still edit it later.
+                    This will save the changes and make them accessible. You can still edit it later.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

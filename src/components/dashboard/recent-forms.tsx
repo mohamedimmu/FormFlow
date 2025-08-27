@@ -75,7 +75,9 @@ export function RecentForms() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
+                      <Link href={`/forms/${form.id}/edit`}>
+                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                      </Link>
                        <Link href={`/forms/${form.id}/preview`}>
                         <DropdownMenuItem>
                           <Eye className="mr-2 h-4 w-4" />
