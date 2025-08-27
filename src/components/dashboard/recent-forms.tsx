@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Eye, Link as LinkIcon, MoreHorizontal } from "lucide-react"
+import { Eye, Link as LinkIcon, MoreHorizontal, QrCode } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -128,6 +128,12 @@ export function RecentForms() {
                             <LinkIcon className="mr-2 h-4 w-4" />
                             Copy Responder Link
                         </DropdownMenuItem>
+                        <Link href={`/forms/${form.id}/share`}>
+                            <DropdownMenuItem>
+                                <QrCode className="mr-2 h-4 w-4" />
+                                Generate QR Code
+                            </DropdownMenuItem>
+                        </Link>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
                         </DropdownMenuContent>

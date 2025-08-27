@@ -26,6 +26,7 @@ import {
   CheckCircle,
   XCircle,
   Link as LinkIcon,
+  QrCode,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -236,6 +237,12 @@ export function FormsTable() {
                             <LinkIcon className="mr-2 h-4 w-4" />
                             Copy Responder Link
                           </DropdownMenuItem>
+                          <Link href={`/forms/${form.id}/share`}>
+                            <DropdownMenuItem>
+                                <QrCode className="mr-2 h-4 w-4" />
+                                Generate QR Code
+                            </DropdownMenuItem>
+                          </Link>
                           <DropdownMenuSeparator />
                           <DropdownMenuSub>
                             <DropdownMenuSubTrigger>
