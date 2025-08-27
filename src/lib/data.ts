@@ -50,26 +50,36 @@ async function seedInitialData() {
                 role: 'Super Admin' as const,
                 mobile: '+1 1234567890',
                 avatar: `https://picsum.photos/seed/SuperAdmin/100/100`,
+                status: 'Active' as const,
             };
             const defaultPassword = '12345678';
             
-            // This will fail if the user already exists in Auth, which is fine.
-            const userCredential = await createUserWithEmailAndPassword(auth, superAdminData.email, defaultPassword)
-                .catch((error) => {
-                    if (error.code === 'auth/email-already-in-use') {
-                        console.log("Super admin user already exists in Firebase Auth.");
-                        return null;
-                    }
-                    throw error;
-                });
+            let authUid: string | null = null;
             
-            if (userCredential) {
-                const authUid = userCredential.user.uid;
-                await setDoc(doc(db, "users", authUid), {
-                    ...superAdminData,
-                    status: 'Active',
-                });
-                console.log("Super Admin created successfully in Firestore.");
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, superAdminData.email, defaultPassword);
+                authUid = userCredential.user.uid;
+            } catch (error: any) {
+                if (error.code === 'auth/email-already-in-use') {
+                    console.log("Super admin user already exists in Firebase Auth. Will check Firestore.");
+                    // We can't get the UID directly if the user exists, so this path is tricky.
+                    // For a robust solution, we'd need a way to look up user by email server-side.
+                    // For this app, we'll assume if the Auth user exists, we don't need to re-create the Firestore doc
+                    // unless the collection is empty.
+                } else {
+                    throw error;
+                }
+            }
+
+            if (authUid) {
+                const userDocRef = doc(db, "users", authUid);
+                const userDoc = await getDoc(userDocRef);
+                if (!userDoc.exists()) {
+                    await setDoc(userDocRef, superAdminData);
+                    console.log("Super Admin created successfully in Firestore.");
+                } else {
+                    console.log("Super Admin document already exists in Firestore.");
+                }
             }
 
         } catch (error) {

@@ -4,7 +4,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { onAuthStateChanged, User as FirebaseUser, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, confirmPasswordReset, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { User as AppUser, getUserProfile, sendInvitation as sendUserInvitation, updateUserProfile } from '@/lib/data';
 
 interface AuthContextType {
@@ -29,12 +29,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshUserProfile = useCallback(async (dataToUpdate?: Partial<AppUser>) => {
     if (user) {
-        if (dataToUpdate) {
+        // Fetch the latest profile first to ensure it exists.
+        const existingProfile = await getUserProfile(user.uid);
+        
+        if (dataToUpdate && existingProfile) {
             await updateUserProfile(user.uid, dataToUpdate);
         }
-        // After any potential update, fetch the latest profile data
-        const profile = await getUserProfile(user.uid);
-        setUserProfile(profile);
+        
+        // After any potential update, fetch the latest profile data again.
+        const updatedProfile = await getUserProfile(user.uid);
+        setUserProfile(updatedProfile);
     }
   }, [user]);
 
@@ -80,7 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const newUser: Omit<AppUser, 'id'> = {
         ...userData,
-        status: 'Active', // Create the user as 'Active' directly
+        status: 'Active',
     };
     
     // Use a single setDoc operation to create the user profile document
