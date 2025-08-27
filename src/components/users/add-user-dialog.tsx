@@ -25,7 +25,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, PlusCircle, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { createUser, sendInvitation } from "@/lib/data";
 import { useAuth } from "@/hooks/use-auth";
 
 const countries = [
@@ -55,7 +54,7 @@ interface AddUserDialogProps {
 export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { user, userProfile } = useAuth();
+  const { userProfile, createUser, sendInvitation } = useAuth();
 
   const isSuperAdmin = userProfile?.role?.toLowerCase() === 'super admin';
 
@@ -84,8 +83,6 @@ export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogP
 
     setIsLoading(true);
     try {
-      // In a real app, the password would be sent securely, perhaps via a backend.
-      // Here, we generate a random one for initial creation. The user will reset it.
       const tempPassword = Math.random().toString(36).slice(-8);
 
       const newUser = await createUser({
@@ -93,14 +90,14 @@ export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogP
         email: values.email,
         role: values.role,
         mobile: `${values.countryCode} ${values.mobile}`,
-        avatar: `https://picsum.photos/seed/${values.name}/100/100`, // random avatar
+        avatar: `https://picsum.photos/seed/${values.name}/100/100`,
       }, tempPassword);
 
       await sendInvitation(newUser.email);
       
       toast({
         title: "User Created & Invitation Sent!",
-        description: `An invitation has been sent to ${newUser.email}. They can use it to set up their account.`,
+        description: `An invitation has been sent to ${newUser.email}.`,
         duration: 10000,
       });
 

@@ -11,7 +11,7 @@ import { Header } from '@/components/layout/header';
 import { Logo } from '@/components/icons';
 
 function AuthGuard({ children }: { children: ReactNode }) {
-    const { user, userProfile, loading } = useAuth();
+    const { user, loading } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
@@ -20,8 +20,7 @@ function AuthGuard({ children }: { children: ReactNode }) {
         }
     }, [user, loading, router]);
 
-    // Now, loading is true until BOTH firebase user and user profile are loaded.
-    if (loading || !user || !userProfile) {
+    if (loading || !user) {
         return (
             <div className="flex min-h-screen w-full items-center justify-center bg-background">
                 <div className="flex flex-col items-center gap-4">

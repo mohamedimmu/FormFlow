@@ -5,7 +5,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode, useCa
 import { onAuthStateChanged, User as FirebaseUser, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, confirmPasswordReset, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, getDocs, query, collection, limit, setDoc } from 'firebase/firestore';
-import { User as AppUser, getUserProfile } from '@/lib/data';
+import { User as AppUser, getUserProfile, sendInvitation as sendUserInvitation } from '@/lib/data';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -15,49 +15,11 @@ interface AuthContextType {
   logout: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   completePasswordReset: (code: string, newPassword: string) => Promise<void>;
+  createUser: (userData: Omit<AppUser, 'id' | 'status'>, password_dont_use: string) => Promise<AppUser>;
+  sendInvitation: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Seeding function moved here to ensure it runs reliably on startup
-async function seedInitialData() {
-    const usersCollection = collection(db, "users");
-    const usersSnapshot = await getDocs(query(usersCollection, limit(1)));
-    
-    if (usersSnapshot.empty) {
-        console.log("No users found. Seeding Super Admin...");
-        try {
-            const superAdminData = {
-                name: 'Super Admin',
-                email: 'admin@formflow.com',
-                role: 'Super Admin' as const,
-                mobile: '+1 1234567890',
-                avatar: 'https://picsum.photos/seed/SuperAdmin/100/100',
-            };
-            const defaultPassword = '12345678';
-
-            const userCredential = await createUserWithEmailAndPassword(auth, superAdminData.email, defaultPassword);
-            const authUid = userCredential.user.uid;
-
-            await setDoc(doc(db, "users", authUid), {
-                ...superAdminData,
-                status: 'Active',
-            });
-
-            console.log("Super Admin created successfully.");
-
-        } catch (error: any) {
-            if (error.code === 'auth/email-already-in-use') {
-                console.log("Super admin user already exists in Auth.");
-            } else {
-                console.error("Error seeding Super Admin:", error);
-            }
-        }
-    } else {
-        // console.log("Users collection is not empty. Skipping seeding.");
-    }
-}
-
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -65,33 +27,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const initializeApp = async () => {
-        // Run the seeding logic once when the app loads
-        await seedInitialData();
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        setLoading(true);
+        if (firebaseUser) {
+            setUser(firebaseUser);
+            const profile = await getUserProfile(firebaseUser.uid);
+            setUserProfile(profile);
+        } else {
+            setUser(null);
+            setUserProfile(null);
+        }
+        setLoading(false);
+    });
 
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            setLoading(true);
-            if (firebaseUser) {
-                setUser(firebaseUser);
-                const profile = await getUserProfile(firebaseUser.uid);
-                setUserProfile(profile);
-            } else {
-                setUser(null);
-                setUserProfile(null);
-            }
-            setLoading(false);
-        });
-
-        return () => unsubscribe();
-    };
-    
-    initializeApp();
+    return () => unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
     await signInWithEmailAndPassword(auth, email, password);
-    // onAuthStateChanged will handle setting user and profile state,
-    // which will trigger a re-render with the correct profile info.
+    // onAuthStateChanged will handle setting user and profile state.
   };
 
   const logout = async () => {
@@ -100,15 +54,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const sendPasswordReset = async (email: string) => {
-    const actionCodeSettings = {
-        url: `${window.location.origin}/invite/set-password`,
-    };
-    await sendPasswordResetEmail(auth, email, actionCodeSettings);
+    await sendUserInvitation(email);
   };
-
+  
   const completePasswordReset = async (code: string, newPassword: string) => {
     await confirmPasswordReset(auth, code, newPassword);
   }
+
+  const createUser = async (userData: Omit<AppUser, 'id' | 'status'>, password_dont_use: string): Promise<AppUser> => {
+    const userCredential = await createUserWithEmailAndPassword(auth, userData.email, password_dont_use);
+    const authUid = userCredential.user.uid;
+
+    const newUser: Omit<AppUser, 'id'> = {
+        ...userData,
+        status: 'Pending',
+    };
+    
+    await setDoc(doc(db, "users", authUid), newUser);
+    return { ...newUser, id: authUid };
+  }
+  
+  const sendInvitation = async (email: string) => {
+    await sendUserInvitation(email);
+  };
 
   const value = {
     user,
@@ -117,7 +85,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     login,
     logout,
     sendPasswordReset,
-    completePasswordReset
+    completePasswordReset,
+    createUser,
+    sendInvitation
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

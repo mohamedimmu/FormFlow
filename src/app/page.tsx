@@ -8,23 +8,29 @@ import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/icons"
 import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
 
 export default function LoginPage() {
-    const { login } = useAuth();
+    const { login, user, loading } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
     const [email, setEmail] = useState("admin@formflow.com");
     const [password, setPassword] = useState("12345678");
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+    useEffect(() => {
+        if (!loading && user) {
+            router.push('/dashboard');
+        }
+    }, [user, loading, router])
 
     const handleLogin = async () => {
-        setIsLoading(true);
+        setIsLoggingIn(true);
         try {
             await login(email, password);
-            router.push('/dashboard');
+            // The useEffect above will handle the redirect
             toast({
                 title: "Login Successful",
                 description: "Welcome back!",
@@ -37,7 +43,7 @@ export default function LoginPage() {
                 description: "Invalid email or password. Please try again.",
             });
         } finally {
-            setIsLoading(false);
+            setIsLoggingIn(false);
         }
     };
 
@@ -100,8 +106,8 @@ export default function LoginPage() {
                 required 
                 />
             </div>
-            <Button onClick={handleLogin} disabled={isLoading} className="w-full">
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button onClick={handleLogin} disabled={isLoggingIn} className="w-full">
+                {isLoggingIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Login
             </Button>
           </div>

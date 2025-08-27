@@ -1,5 +1,5 @@
 
-import { collection, addDoc, getDocs, getDoc, doc, updateDoc, query, orderBy, limit, writeBatch, where, documentId, setDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, getDoc, doc, updateDoc, query, orderBy, limit, writeBatch, where, documentId, setDoc, getCountFromServer } from "firebase/firestore";
 import type { Question } from "@/components/forms/form-builder";
 import { db, auth } from "./firebase";
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
@@ -38,6 +38,50 @@ const formsCollection = collection(db, "forms");
 const usersCollection = collection(db, "users");
 const responsesCollection = collection(db, "responses");
 
+// Seeding function to ensure a super admin exists
+async function seedInitialData() {
+    const snapshot = await getCountFromServer(usersCollection);
+    if (snapshot.data().count === 0) {
+        console.log("No users found. Seeding Super Admin...");
+        try {
+            const superAdminData = {
+                name: 'Super Admin',
+                email: 'admin@formflow.com',
+                role: 'Super Admin' as const,
+                mobile: '+1 1234567890',
+                avatar: `https://picsum.photos/seed/SuperAdmin/100/100`,
+            };
+            const defaultPassword = '12345678';
+            
+            // This will fail if the user already exists in Auth, which is fine.
+            const userCredential = await createUserWithEmailAndPassword(auth, superAdminData.email, defaultPassword)
+                .catch((error) => {
+                    if (error.code === 'auth/email-already-in-use') {
+                        console.log("Super admin user already exists in Firebase Auth.");
+                        return null;
+                    }
+                    throw error;
+                });
+            
+            if (userCredential) {
+                const authUid = userCredential.user.uid;
+                await setDoc(doc(db, "users", authUid), {
+                    ...superAdminData,
+                    status: 'Active',
+                });
+                console.log("Super Admin created successfully in Firestore.");
+            }
+
+        } catch (error) {
+            console.error("Error seeding Super Admin:", error);
+        }
+    }
+}
+
+// Run seed function on first import
+seedInitialData();
+
+
 // Form functions
 export async function createForm(formData: Omit<Form, 'id'>) {
     const docRef = await addDoc(formsCollection, {
@@ -74,11 +118,6 @@ export async function updateForm(id: string, formData: Partial<Omit<Form, 'id'>>
 
 // User functions
 export async function createUser(userData: Omit<User, 'id' | 'status'>, password_dont_use: string): Promise<User> {
-    
-    // NOTE: In a real-world scenario, you would not pass the password like this.
-    // You'd typically use a Cloud Function triggered by the document creation
-    // to create the Auth user, to avoid having password creation logic on the client.
-    // For this prototype, we'll do it on the client for simplicity.
     const userCredential = await createUserWithEmailAndPassword(auth, userData.email, password_dont_use);
     const authUid = userCredential.user.uid;
 
@@ -87,9 +126,7 @@ export async function createUser(userData: Omit<User, 'id' | 'status'>, password
         status: 'Pending',
     };
     
-    // We use the UID from Auth as the document ID in Firestore for a 1:1 mapping.
     await setDoc(doc(usersCollection, authUid), newUser);
-
     return { ...newUser, id: authUid };
 }
 
@@ -110,11 +147,11 @@ export async function getUsers(): Promise<User[]> {
 
 export async function sendInvitation(email: string) {
     const actionCodeSettings = {
-        url: `${window.location.origin}/invite/set-password`, // Generic URL, token handled by Firebase
+        url: `${window.location.origin}/invite/set-password`,
         handleCodeInApp: true,
     };
     await sendPasswordResetEmail(auth, email, actionCodeSettings);
-    console.log(`Password reset/invitation email sent to ${email}. Check your inbox or console for the link.`);
+    console.log(`Password reset/invitation email sent to ${email}.`);
 }
 
 
@@ -123,7 +160,6 @@ export async function getResponses(formId: string): Promise<FormResponse[]> {
     const q = query(responsesCollection, where("formId", "==", formId));
     const snapshot = await getDocs(q);
     const responses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FormResponse));
-    // Sort by date client-side to avoid composite index
     return responses.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
 }
 
@@ -135,7 +171,6 @@ export async function createResponse(formId: string, answers: { [key: string]: a
     };
     const docRef = await addDoc(responsesCollection, responseData);
     
-    // Also increment the response count on the form
     const form = await getForm(formId);
     if (form) {
         await updateForm(formId, { responses: form.responses + 1 });
