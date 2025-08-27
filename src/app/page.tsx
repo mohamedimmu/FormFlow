@@ -1,45 +1,59 @@
+
 "use client"
 
 import Link from "next/link"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Logo } from "@/components/icons"
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md">
-        <Card className="shadow-2xl">
-          <CardHeader className="text-center">
-            <div className="mb-4 flex justify-center">
-                <Logo className="h-12 w-12" />
+    <div className="w-full min-h-screen lg:grid lg:grid-cols-2">
+      <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex bg-gradient-to-br from-blue-600 to-blue-900">
+        <div className="absolute inset-0" />
+        <div className="relative z-20 flex items-center text-lg font-medium">
+          <Logo className="h-8 w-8 mr-2" />
+          FormFlow
+        </div>
+        <div className="relative z-20 mt-auto">
+            <h1 className="text-4xl font-bold">FormFlow</h1>
+            <p className="mt-2 text-lg text-blue-200">
+                Login to manage questions, share with employees, and review responses.
+            </p>
+        </div>
+        <div className="absolute bottom-0 left-0 z-10 h-64 w-64 -translate-x-1/4 translate-y-1/4 rounded-full border-2 border-blue-400/30"></div>
+        <div className="absolute bottom-0 left-0 z-10 h-48 w-48 translate-x-4 translate-y-4 rounded-full border-2 border-blue-400/30"></div>
+      </div>
+      <div className="flex items-center justify-center py-12">
+        <div className="mx-auto grid w-[350px] gap-6">
+          <div className="grid gap-2 text-left">
+            <h1 className="text-3xl font-bold">Login to FormFlow</h1>
+          </div>
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email ID</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
+                defaultValue="javidfaaz@gmail.com"
+                required
+              />
             </div>
-            <CardTitle className="text-3xl font-bold">Welcome to FormFlow</CardTitle>
-            <CardDescription>Select a role to sign in to your dashboard</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <Select defaultValue="employee">
-                  <SelectTrigger id="role">
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="employee">Employee</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="super-admin">Super Admin</SelectItem>
-                  </SelectContent>
-                </Select>
+            <div className="grid gap-2">
+              <div className="flex items-center">
+                <Label htmlFor="password">Password</Label>
               </div>
-              <Link href="/dashboard" className="w-full">
-                <Button className="w-full" size="lg">Sign In</Button>
-              </Link>
+              <Input id="password" type="password" defaultValue="12345678" required />
             </div>
-          </CardContent>
-        </Card>
+             <Link href="/dashboard">
+                <Button type="submit" className="w-full">
+                Login
+                </Button>
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   )
