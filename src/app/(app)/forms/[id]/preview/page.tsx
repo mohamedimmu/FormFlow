@@ -46,7 +46,7 @@ export default function FormPreviewPage({ params }: { params: { id: string } }) 
             // Use the consistent mock data source
             setPreviewForm({
                 ...form,
-                questions: MOCK_QUESTIONS.slice(0, form.questions)
+                questions: MOCK_QUESTIONS.slice(0, 5)
             });
         }
         setIsLoading(false);

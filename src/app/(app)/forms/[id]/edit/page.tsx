@@ -13,7 +13,7 @@ export default function EditFormPage({ params }: { params: { id: string } }) {
     // For this example, we use a consistent mock data source.
     const initialData = {
         ...form,
-        questions: MOCK_QUESTIONS.slice(0, form.questions)
+        questions: MOCK_QUESTIONS.slice(0, 3)
     };
 
 
