@@ -24,28 +24,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userProfile, setUserProfile] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUserProfile = useCallback(async (firebaseUser: FirebaseUser | null) => {
-    if (firebaseUser) {
-      const profile = await getUserProfile(firebaseUser.uid);
-      setUserProfile(profile);
-    } else {
-      setUserProfile(null);
-    }
-  }, []);
-
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setLoading(true);
-      setUser(user);
-      await fetchUserProfile(user);
+      if (firebaseUser) {
+        setUser(firebaseUser);
+        const profile = await getUserProfile(firebaseUser.uid);
+        setUserProfile(profile);
+      } else {
+        setUser(null);
+        setUserProfile(null);
+      }
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [fetchUserProfile]);
+  }, []);
 
   const login = async (email: string, password: string) => {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    await signInWithEmailAndPassword(auth, email, password);
     // onAuthStateChanged will handle setting user and profile state.
   };
 
@@ -56,8 +53,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const sendPasswordReset = async (email: string) => {
-    // Note: ensure this matches the page where users reset their password.
-    // The [token] part is a placeholder for the actual page route.
     const actionCodeSettings = {
         url: `${window.location.origin}/invite/reset-password`,
     };
