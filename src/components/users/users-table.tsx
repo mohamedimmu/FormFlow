@@ -2,13 +2,6 @@
 
 import { useEffect, useState } from "react";
 import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card"
-import {
   Table,
   TableHeader,
   TableRow,
@@ -16,20 +9,11 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal } from "lucide-react"
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Eye, Pencil, Trash2 } from "lucide-react"
 import { getUsers, type User } from "@/lib/data"
 import { Skeleton } from "../ui/skeleton";
+import { Badge } from "../ui/badge";
 
 export function UsersTable() {
     const [users, setUsers] = useState<User[]>([]);
@@ -45,97 +29,95 @@ export function UsersTable() {
         loadUsers();
     }, []);
 
-    const getBadgeVariant = (role: 'Employee' | 'Admin' | 'Super Admin') => {
+    const getRoleClassName = (role: 'Employee' | 'Admin' | 'Super Admin') => {
         switch (role) {
-            case 'Super Admin': return 'destructive';
-            case 'Admin': return 'default';
-            case 'Employee': return 'secondary';
-            default: return 'outline';
+            case 'Super Admin': return 'text-green-600';
+            case 'Admin': return 'text-blue-600';
+            case 'Employee': return 'text-red-600';
+            default: return 'text-muted-foreground';
         }
     }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Users</CardTitle>
-        <CardDescription>A list of all users in your account.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="border rounded-md">
-            <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead className="hidden md:table-cell">Contact</TableHead>
-                    <TableHead>
-                        <span className="sr-only">Actions</span>
-                    </TableHead>
+    <>
+      <div className="border rounded-md">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead>User Id</TableHead>
+              <TableHead>User Name</TableHead>
+              <TableHead>Mobile Number</TableHead>
+              <TableHead>Email Id</TableHead>
+              <TableHead>Admin Type</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              Array.from({length: 6}).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-48" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-8 w-24" /></TableCell>
                 </TableRow>
-            </TableHeader>
-            <TableBody>
-                {isLoading ? (
-                    Array.from({length: 5}).map((_, i) => (
-                        <TableRow key={i}>
-                            <TableCell><Skeleton className="h-10 w-48" /></TableCell>
-                            <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                            <TableCell className="hidden md:table-cell"><Skeleton className="h-10 w-48" /></TableCell>
-                            <TableCell><Skeleton className="h-8 w-8" /></TableCell>
-                        </TableRow>
-                    ))
-                ) : users.length > 0 ? (
-                    users.map((user) => (
-                    <TableRow key={user.id}>
-                        <TableCell>
-                            <div className="flex items-center gap-3">
-                                <Avatar className="h-9 w-9">
-                                    <AvatarImage src={`https://picsum.photos/id/${user.id}/100/100`} data-ai-hint="person avatar" alt={user.name} />
-                                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <div className="font-medium">{user.name}</div>
-                            </div>
-                        </TableCell>
-                        <TableCell>
-                            <Badge variant={getBadgeVariant(user.role)}>{user.role}</Badge>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                            <div>{user.email}</div>
-                            <div className="text-muted-foreground">{user.mobile}</div>
-                        </TableCell>
-                        <TableCell>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                <Button aria-haspopup="true" size="icon" variant="ghost">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                    <span className="sr-only">Toggle menu</span>
-                                </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuItem>Edit User</DropdownMenuItem>
-                                <DropdownMenuItem>View Activity</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive">Delete User</DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </TableCell>
-                    </TableRow>
-                    ))
-                ) : (
-                    <TableRow>
-                        <TableCell colSpan={4} className="h-24 text-center">
-                            No users found.
-                        </TableCell>
-                    </TableRow>
-                )}
-            </TableBody>
-            </Table>
+              ))
+            ) : users.length > 0 ? (
+              users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">#{user.id.substring(0, 5)}</TableCell>
+                  <TableCell>{user.name}</TableCell>
+                  <TableCell>{user.mobile}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <span className={`font-semibold ${getRoleClassName(user.role)}`}>
+                        {user.role === 'Employee' ? 'User' : user.role}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center">
+                  No users found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="flex items-center justify-between py-4">
+        <div className="text-sm text-muted-foreground">
+          Showing 1-{users.length} of {users.length} Users
         </div>
-        <div className="flex items-center justify-end space-x-2 py-4">
-            <Button variant="outline" size="sm" disabled={users.length === 0}>Previous</Button>
-            <Button variant="outline" size="sm" disabled={users.length === 0}>Next</Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" disabled={users.length === 0}>Previous</Button>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="h-8 w-8">1</Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8">2</Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8">3</Button>
+            <span>...</span>
+            <Button variant="ghost" size="icon" className="h-8 w-8">8</Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8">9</Button>
+          </div>
+          <Button variant="outline" size="sm" disabled={users.length === 0}>Next</Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </>
   )
 }
