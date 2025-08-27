@@ -101,9 +101,11 @@ export async function getUsers(): Promise<User[]> {
 
 // Response functions
 export async function getResponses(formId: string): Promise<FormResponse[]> {
-    const q = query(responsesCollection, where("formId", "==", formId), orderBy("submittedAt", "desc"));
+    const q = query(responsesCollection, where("formId", "==", formId));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FormResponse));
+    const responses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FormResponse));
+    // Sort by date client-side to avoid composite index
+    return responses.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
 }
 
 export async function createResponse(formId: string, answers: { [key: string]: any }) {
