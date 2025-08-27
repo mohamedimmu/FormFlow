@@ -90,6 +90,42 @@ export function FormsTable() {
     return true;
   });
 
+  const exportToCsv = () => {
+    if (filteredForms.length === 0) {
+        toast({
+            variant: 'destructive',
+            title: 'No Data to Export',
+            description: 'There are no forms in the current view to export.',
+        });
+        return;
+    }
+
+    const headers = ['ID', 'Name', 'Description', 'Status', 'Responses', 'Questions', 'Created At'];
+    const rows = filteredForms.map(form => [
+        form.id,
+        `"${form.name.replace(/"/g, '""')}"`,
+        `"${form.description.replace(/"/g, '""')}"`,
+        form.status,
+        form.responses,
+        form.questions,
+        new Date(form.createdAt).toISOString()
+    ].join(','));
+
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.href) {
+        URL.revokeObjectURL(link.href);
+    }
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute('download', 'forms.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+
   return (
     <Card>
       <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -98,7 +134,7 @@ export function FormsTable() {
             <CardDescription>Manage your forms and view their performance.</CardDescription>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-2 ml-auto">
-            <Button variant="outline">
+            <Button variant="outline" onClick={exportToCsv} disabled={isLoading || filteredForms.length === 0}>
                 <FileDown className="mr-2 h-4 w-4" />
                 Export
             </Button>
