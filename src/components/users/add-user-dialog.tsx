@@ -56,7 +56,7 @@ export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogP
   const { toast } = useToast();
   const { userProfile, createUser, sendInvitation } = useAuth();
 
-  const canInvite = userProfile?.role?.toLowerCase() === 'super admin' || userProfile?.role?.toLowerCase() === 'admin';
+  const canInvite = userProfile?.role === 'Super Admin' || userProfile?.role === 'Admin';
 
   const form = useForm<z.infer<typeof userSchema>>({
     resolver: zodResolver(userSchema),
@@ -147,7 +147,7 @@ export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogP
                         control={form.control}
                         name="countryCode"
                         render={({ field }) => (
-                            <Select onValuechange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
                                     <SelectTrigger className="w-[120px]">
                                         <SelectValue placeholder="Code" />
@@ -203,7 +203,7 @@ export function AddUserDialog({ isOpen, setIsOpen, onUserAdded }: AddUserDialogP
                     <SelectContent>
                       <SelectItem value="Employee">Employee</SelectItem>
                       <SelectItem value="Admin">Admin</SelectItem>
-                      {userProfile?.role?.toLowerCase() === 'super admin' && (
+                      {userProfile?.role === 'Super Admin' && (
                         <SelectItem value="Super Admin">Super Admin</SelectItem>
                       )}
                     </SelectContent>
