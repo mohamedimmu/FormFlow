@@ -21,9 +21,10 @@ interface Question {
 
 interface FormDisplayProps {
   questions: Question[];
+  isPreview?: boolean;
 }
 
-export function FormDisplay({ questions }: FormDisplayProps) {
+export function FormDisplay({ questions, isPreview = false }: FormDisplayProps) {
   const renderQuestion = (question: Question) => {
     const questionId = `q-${question.id}`;
     return (
@@ -44,12 +45,12 @@ export function FormDisplay({ questions }: FormDisplayProps) {
   const renderInput = (question: Question, questionId: string) => {
     switch (question.type) {
       case 'short-answer':
-        return <Input id={questionId} required={question.required} />;
+        return <Input id={questionId} required={question.required} disabled={isPreview} />;
       case 'paragraph':
-        return <Textarea id={questionId} required={question.required} />;
+        return <Textarea id={questionId} required={question.required} disabled={isPreview} />;
       case 'multiple-choice':
         return (
-          <RadioGroup id={questionId} required={question.required}>
+          <RadioGroup id={questionId} required={question.required} disabled={isPreview}>
             {question.options?.map((option, index) => (
               <div key={index} className="flex items-center space-x-2">
                 <RadioGroupItem value={option} id={`${questionId}-${index}`} />
@@ -63,7 +64,7 @@ export function FormDisplay({ questions }: FormDisplayProps) {
           <div id={questionId} className="space-y-2">
             {question.options?.map((option, index) => (
               <div key={index} className="flex items-center space-x-2">
-                <Checkbox id={`${questionId}-${index}`} />
+                <Checkbox id={`${questionId}-${index}`} disabled={isPreview} />
                 <Label htmlFor={`${questionId}-${index}`}>{option}</Label>
               </div>
             ))}
@@ -71,7 +72,7 @@ export function FormDisplay({ questions }: FormDisplayProps) {
         );
       case 'dropdown':
         return (
-          <Select required={question.required}>
+          <Select required={question.required} disabled={isPreview}>
             <SelectTrigger id={questionId}>
               <SelectValue placeholder="Select an option" />
             </SelectTrigger>
@@ -83,17 +84,17 @@ export function FormDisplay({ questions }: FormDisplayProps) {
           </Select>
         );
       case 'file-upload':
-        return <Input id={questionId} type="file" required={question.required} />;
+        return <Input id={questionId} type="file" required={question.required} disabled={isPreview} />;
       default:
         return null;
     }
   };
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); alert('Form submitted!'); }}>
+    <form onSubmit={(e) => { e.preventDefault(); if(!isPreview) alert('Form submitted!'); }}>
       {questions.map(renderQuestion)}
       <div className="flex justify-end">
-        <Button type="submit">Submit Form</Button>
+        <Button type="submit" disabled={isPreview}>Submit Form</Button>
       </div>
     </form>
   );

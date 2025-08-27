@@ -24,7 +24,7 @@ export default function FormPreviewPage({ params }: { params: { id: string } }) 
         <div className="container mx-auto max-w-2xl py-8">
              <h1 className="text-3xl font-bold tracking-tight mb-2">{form.name}</h1>
              <p className="text-muted-foreground mb-8">{form.description}</p>
-            <FormDisplay questions={mockQuestions} />
+            <FormDisplay questions={mockQuestions} isPreview={true} />
         </div>
     );
 }
