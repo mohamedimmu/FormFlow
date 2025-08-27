@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from "react";
 import Link from "next/link"
 import {
   Card,
@@ -35,9 +38,24 @@ import {
   TabsList,
   TabsTrigger
 } from "@/components/ui/tabs"
-import { forms } from "@/lib/data"
+import { forms, type Form } from "@/lib/data"
 
 export function FormsTable() {
+  const [allForms, setAllForms] = useState<Form[]>([]);
+  const [activeTab, setActiveTab] = useState("all");
+
+  useEffect(() => {
+    // This ensures we have the latest data when the component mounts or data source changes.
+    setAllForms(forms);
+  }, []);
+
+  const filteredForms = allForms.filter(form => {
+    if (activeTab === 'all') return true;
+    if (activeTab === 'active') return form.status === 'Active';
+    if (activeTab === 'inactive') return form.status === 'Inactive';
+    return true;
+  });
+
   return (
     <Card>
       <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -57,14 +75,15 @@ export function FormsTable() {
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Filter by status</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuCheckboxItem checked>Active</DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem>Inactive</DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem checked={activeTab === 'active'} onCheckedChange={() => setActiveTab('active')}>Active</DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem checked={activeTab === 'inactive'} onCheckedChange={() => setActiveTab('inactive')}>Inactive</DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem checked={activeTab === 'all'} onCheckedChange={() => setActiveTab('all')}>All</DropdownMenuCheckboxItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="all">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
                 <TabsTrigger value="all">All</TabsTrigger>
                 <TabsTrigger value="active">Active</TabsTrigger>
@@ -85,7 +104,7 @@ export function FormsTable() {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {forms.map((form) => (
+                {filteredForms.map((form) => (
                 <TableRow key={form.id}>
                     <TableCell>
                     <div className="font-medium">{form.name}</div>
