@@ -43,7 +43,7 @@ export function ResponsesTable({ formId, questions }: ResponsesTableProps) {
         loadResponses();
     }, [formId]);
 
-    const questionHeaders = questions.map(q => ({ id: q.id, title: q.title })).slice(0, 4); // Limit to first 4 questions for table view
+    const questionHeaders = questions.map(q => ({ id: String(q.id), title: q.title })).slice(0, 4); // Limit to first 4 questions for table view
 
     return (
         <Card>
