@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Eye, Link as LinkIcon, MoreHorizontal, QrCode } from "lucide-react"
+import { Eye, Link as LinkIcon, MoreHorizontal, QrCode, Pencil, BarChart3, Trash2 } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -113,7 +113,10 @@ export function RecentForms() {
                         <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <Link href={`/forms/${form.id}/edit`}>
-                            <DropdownMenuItem>Edit</DropdownMenuItem>
+                            <DropdownMenuItem>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Edit
+                            </DropdownMenuItem>
                         </Link>
                         <Link href={`/forms/${form.id}/preview`}>
                             <DropdownMenuItem>
@@ -122,7 +125,10 @@ export function RecentForms() {
                             </DropdownMenuItem>
                         </Link>
                         <Link href={`/forms/${form.id}/responses`}>
-                            <DropdownMenuItem>View Responses</DropdownMenuItem>
+                            <DropdownMenuItem>
+                                <BarChart3 className="mr-2 h-4 w-4" />
+                                View Responses
+                            </DropdownMenuItem>
                         </Link>
                         <DropdownMenuItem onClick={() => handleCopyLink(form.id)}>
                             <LinkIcon className="mr-2 h-4 w-4" />
@@ -135,7 +141,10 @@ export function RecentForms() {
                             </DropdownMenuItem>
                         </Link>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                        </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                     </TableCell>
