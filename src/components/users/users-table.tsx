@@ -56,14 +56,15 @@ export function UsersTable({ refreshKey, onEdit, onDelete }: UsersTableProps) {
 
     const canPerformAction = (targetUser: User) => {
       if (!userProfile) return false;
+      // Super Admin can edit/delete anyone except themselves.
       if (userProfile.role === 'Super Admin') {
-        // Super Admin can't delete themselves
         return userProfile.id !== targetUser.id;
       }
+      // Admin can edit/delete any user who is not a Super Admin, except themselves.
       if (userProfile.role === 'Admin') {
-        // Admin can only edit/delete Employees, and not themselves
-        return targetUser.role === 'Employee' && userProfile.id !== targetUser.id;
+        return targetUser.role !== 'Super Admin' && userProfile.id !== targetUser.id;
       }
+      // Employees cannot perform these actions.
       return false;
     }
 
