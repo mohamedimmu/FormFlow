@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Eye, Link as LinkIcon, MoreHorizontal, QrCode, Pencil, BarChart3, Trash2 } from "lucide-react"
+import { Eye, Link as LinkIcon, MoreHorizontal, QrCode, Pencil, BarChart3, Trash2, Loader2 } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -28,22 +28,36 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { getRecentForms, type Form } from "@/lib/data"
+import { getRecentForms, deleteForm, type Form } from "@/lib/data"
 import { Skeleton } from "../ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 
 export function RecentForms() {
   const [recentForms, setRecentForms] = useState<Form[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [formToDelete, setFormToDelete] = useState<Form | null>(null);
   const { toast } = useToast();
 
+  async function loadRecentForms() {
+    setIsLoading(true);
+    const formsFromDb = await getRecentForms(5);
+    setRecentForms(formsFromDb);
+    setIsLoading(false);
+  }
+
   useEffect(() => {
-    async function loadRecentForms() {
-        setIsLoading(true);
-        const formsFromDb = await getRecentForms(5);
-        setRecentForms(formsFromDb);
-        setIsLoading(false);
-    }
     loadRecentForms();
   }, []);
 
@@ -56,7 +70,35 @@ export function RecentForms() {
     });
   }
 
+  const handleDeleteClick = (form: Form) => {
+    setFormToDelete(form);
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!formToDelete) return;
+    setIsDeleting(true);
+    try {
+        await deleteForm(formToDelete.id);
+        toast({
+            title: "Form Deleted",
+            description: `The form "${formToDelete.name}" has been deleted.`,
+        });
+        await loadRecentForms();
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to delete the form.",
+        });
+    } finally {
+        setIsDeleting(false);
+        setFormToDelete(null);
+    }
+  }
+
+
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle>Recent Forms</CardTitle>
@@ -141,7 +183,7 @@ export function RecentForms() {
                             </DropdownMenuItem>
                         </Link>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteClick(form)}>
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete
                         </DropdownMenuItem>
@@ -161,5 +203,30 @@ export function RecentForms() {
         </Table>
       </CardContent>
     </Card>
+     {formToDelete && (
+        <AlertDialog open={!!formToDelete} onOpenChange={(open) => !open && setFormToDelete(null)}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the form
+                        "{formToDelete.name}" and all its associated responses.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                        onClick={handleDeleteConfirm}
+                        disabled={isDeleting}
+                        className="bg-destructive hover:bg-destructive/90"
+                    >
+                        {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Yes, delete form
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    )}
+    </>
   )
 }

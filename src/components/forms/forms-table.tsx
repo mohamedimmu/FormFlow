@@ -27,6 +27,10 @@ import {
   XCircle,
   Link as LinkIcon,
   QrCode,
+  Trash2,
+  Pencil,
+  BarChart3,
+  Loader2,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -42,11 +46,21 @@ import {
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu"
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Tabs,
   TabsList,
   TabsTrigger
 } from "@/components/ui/tabs"
-import { getForms, updateForm, type Form } from "@/lib/data"
+import { getForms, updateForm, deleteForm, type Form } from "@/lib/data"
 import { Skeleton } from "../ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 
@@ -54,6 +68,8 @@ export function FormsTable() {
   const [allForms, setAllForms] = useState<Form[]>([]);
   const [activeTab, setActiveTab] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [formToDelete, setFormToDelete] = useState<Form | null>(null);
   const { toast } = useToast();
 
   async function loadForms() {
@@ -136,8 +152,35 @@ export function FormsTable() {
     });
   }
 
+  const handleDeleteClick = (form: Form) => {
+    setFormToDelete(form);
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!formToDelete) return;
+    setIsDeleting(true);
+    try {
+        await deleteForm(formToDelete.id);
+        toast({
+            title: "Form Deleted",
+            description: `The form "${formToDelete.name}" has been deleted.`,
+        });
+        await loadForms();
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to delete the form.",
+        });
+    } finally {
+        setIsDeleting(false);
+        setFormToDelete(null);
+    }
+  }
+
 
   return (
+    <>
     <Card>
       <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -222,7 +265,10 @@ export function FormsTable() {
                           <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <Link href={`/forms/${form.id}/edit`}>
-                            <DropdownMenuItem>Edit</DropdownMenuItem>
+                            <DropdownMenuItem>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Edit
+                            </DropdownMenuItem>
                           </Link>
                           <Link href={`/forms/${form.id}/preview`}>
                               <DropdownMenuItem>
@@ -231,7 +277,10 @@ export function FormsTable() {
                               </DropdownMenuItem>
                           </Link>
                           <Link href={`/forms/${form.id}/responses`}>
-                              <DropdownMenuItem>View Responses</DropdownMenuItem>
+                              <DropdownMenuItem>
+                                  <BarChart3 className="mr-2 h-4 w-4" />
+                                  View Responses
+                              </DropdownMenuItem>
                           </Link>
                           <DropdownMenuItem onClick={() => handleCopyLink(form.id)}>
                             <LinkIcon className="mr-2 h-4 w-4" />
@@ -262,7 +311,10 @@ export function FormsTable() {
                             </DropdownMenuPortal>
                           </DropdownMenuSub>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteClick(form)}>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                          </DropdownMenuItem>
                           </DropdownMenuContent>
                       </DropdownMenu>
                       </TableCell>
@@ -284,5 +336,30 @@ export function FormsTable() {
         </div>
       </CardContent>
     </Card>
+    {formToDelete && (
+        <AlertDialog open={!!formToDelete} onOpenChange={(open) => !open && setFormToDelete(null)}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the form
+                        "{formToDelete.name}" and all its associated responses.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                        onClick={handleDeleteConfirm}
+                        disabled={isDeleting}
+                        className="bg-destructive hover:bg-destructive/90"
+                    >
+                        {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Yes, delete form
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    )}
+    </>
   )
 }

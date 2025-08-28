@@ -1,9 +1,10 @@
 
 
+
 import { collection, addDoc, getDocs, getDoc, doc, updateDoc, query, orderBy, limit, writeBatch, where, documentId, setDoc, getCountFromServer, deleteDoc } from "firebase/firestore";
 import type { Question } from "@/components/forms/form-builder";
 import { db, auth } from "./firebase";
-import { createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendPasswordResetEmail, confirmPasswordReset } from "firebase/auth";
 
 
 export type Form = {
@@ -41,8 +42,9 @@ const responsesCollection = collection(db, "responses");
 
 // Seeding function to ensure a super admin exists
 async function seedInitialData() {
-    const snapshot = await getCountFromServer(usersCollection);
-    if (snapshot.data().count === 0) {
+    const userDocRef = doc(db, "users", "1BpFOSps9makqKG1nhone9SjQzR2");
+    const userDoc = await getDoc(userDocRef);
+    if (!userDoc.exists()) {
         console.log("No users found. Seeding Super Admin...");
         try {
             const superAdminData = {
@@ -53,34 +55,9 @@ async function seedInitialData() {
                 avatar: `https://picsum.photos/seed/SuperAdmin/100/100`,
                 status: 'Active' as const,
             };
-            const defaultPassword = '12345678';
             
-            let authUid: string | null = null;
-            
-            try {
-                const userCredential = await createUserWithEmailAndPassword(auth, superAdminData.email, defaultPassword);
-                authUid = userCredential.user.uid;
-            } catch (error: any) {
-                if (error.code === 'auth/email-already-in-use') {
-                    console.log("Super admin user already exists in Firebase Auth. Will check Firestore.");
-                    // In a real app, you would need a way to get the uid for the existing email.
-                    // For this app's purpose, we'll assume a manual setup or a different flow if this happens.
-                } else {
-                    throw error;
-                }
-            }
-
-            if (authUid) {
-                const userDocRef = doc(db, "users", authUid);
-                const userDoc = await getDoc(userDocRef);
-                if (!userDoc.exists()) {
-                    await setDoc(userDocRef, superAdminData);
-                    console.log("Super Admin created successfully in Firestore.");
-                } else {
-                    console.log("Super Admin document already exists in Firestore.");
-                }
-            }
-
+            await setDoc(userDocRef, superAdminData);
+            console.log("Super Admin created successfully in Firestore.");
         } catch (error) {
             console.error("Error seeding Super Admin:", error);
         }
@@ -124,6 +101,14 @@ export async function updateForm(id: string, formData: Partial<Omit<Form, 'id'>>
     await updateDoc(docRef, formData);
 }
 
+export async function deleteForm(id: string) {
+    // Note: This deletes the form document. In a real-world application,
+    // you would also want to delete all associated responses, which would
+    // ideally be handled by a Firebase Cloud Function for atomicity.
+    const docRef = doc(db, "forms", id);
+    await deleteDoc(docRef);
+}
+
 
 // User functions
 export async function getUserProfile(uid: string): Promise<User | null> {
@@ -146,11 +131,9 @@ export async function getUsers(): Promise<User[]> {
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
 }
 
-// This function is defined and called from useAuth now.
-// Leaving it here for reference but it's not the primary entry point.
 export async function sendInvitation(email: string) {
     const actionCodeSettings = {
-        url: `${window.location.origin}/invite/set-password?email=${email}`,
+        url: `${window.location.origin}/invite/set-password`,
         handleCodeInApp: true,
     };
     await sendPasswordResetEmail(auth, email, actionCodeSettings);
