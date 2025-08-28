@@ -1,5 +1,6 @@
 
-import { collection, addDoc, getDocs, getDoc, doc, updateDoc, query, orderBy, limit, writeBatch, where, documentId, setDoc, getCountFromServer } from "firebase/firestore";
+
+import { collection, addDoc, getDocs, getDoc, doc, updateDoc, query, orderBy, limit, writeBatch, where, documentId, setDoc, getCountFromServer, deleteDoc } from "firebase/firestore";
 import type { Question } from "@/components/forms/form-builder";
 import { db, auth } from "./firebase";
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
@@ -149,7 +150,7 @@ export async function getUsers(): Promise<User[]> {
 // Leaving it here for reference but it's not the primary entry point.
 export async function sendInvitation(email: string) {
     const actionCodeSettings = {
-        url: `${window.location.origin}/invite/set-password`,
+        url: `${window.location.origin}/invite/set-password?email=${email}`,
         handleCodeInApp: true,
     };
     await sendPasswordResetEmail(auth, email, actionCodeSettings);
@@ -179,4 +180,18 @@ export async function createResponse(formId: string, answers: { [key: string]: a
     }
 
     return docRef.id;
+}
+
+
+// More user functions
+export async function updateUser(uid: string, data: Partial<User>) {
+    const docRef = doc(db, "users", uid);
+    await updateDoc(docRef, data);
+}
+
+export async function deleteUser(uid: string) {
+    // This is a simplified deletion. In a real app, you'd want a Cloud Function
+    // to delete the user from Firebase Auth and clean up their associated data.
+    const docRef = doc(db, "users", uid);
+    await deleteDoc(docRef);
 }

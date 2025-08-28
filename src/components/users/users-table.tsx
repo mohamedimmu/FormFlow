@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from "react";
@@ -13,13 +14,21 @@ import { Button } from "@/components/ui/button"
 import { Eye, Pencil, Trash2 } from "lucide-react"
 import { getUsers, type User } from "@/lib/data"
 import { Skeleton } from "../ui/skeleton";
+import { useAuth } from "@/hooks/use-auth";
 
 const USERS_PER_PAGE = 10;
 
-export function UsersTable({ refreshKey }: { refreshKey: number }) {
+interface UsersTableProps {
+  refreshKey: number;
+  onEdit: (user: User) => void;
+  onDelete: (user: User) => void;
+}
+
+export function UsersTable({ refreshKey, onEdit, onDelete }: UsersTableProps) {
     const [allUsers, setAllUsers] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
+    const { userProfile } = useAuth();
 
     useEffect(() => {
         async function loadUsers() {
@@ -43,6 +52,19 @@ export function UsersTable({ refreshKey }: { refreshKey: number }) {
             case 'Employee': return 'text-red-600';
             default: return 'text-muted-foreground';
         }
+    }
+
+    const canPerformAction = (targetUser: User) => {
+      if (!userProfile) return false;
+      if (userProfile.role === 'Super Admin') {
+        // Super Admin can't delete themselves
+        return userProfile.id !== targetUser.id;
+      }
+      if (userProfile.role === 'Admin') {
+        // Admin can only edit/delete Employees, and not themselves
+        return targetUser.role === 'Employee' && userProfile.id !== targetUser.id;
+      }
+      return false;
     }
 
     const handlePreviousPage = () => {
@@ -96,10 +118,22 @@ export function UsersTable({ refreshKey }: { refreshKey: number }) {
                       <Button variant="ghost" size="icon" className="h-8 w-8">
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8"
+                        onClick={() => onEdit(user)}
+                        disabled={!canPerformAction(user)}
+                      >
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => onDelete(user)}
+                        disabled={!canPerformAction(user)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
