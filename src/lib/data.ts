@@ -190,8 +190,15 @@ export async function updateUser(uid: string, data: Partial<User>) {
 }
 
 export async function deleteUser(uid: string) {
-    // This is a simplified deletion. In a real app, you'd want a Cloud Function
-    // to delete the user from Firebase Auth and clean up their associated data.
+    // IMPORTANT: This function only deletes the user's document from Firestore.
+    // It does NOT delete the user from Firebase Authentication. Deleting a user
+    // from Firebase Auth requires elevated, admin privileges and cannot be done
+    // securely from the client-side.
+    //
+    // The recommended approach is to use a Firebase Cloud Function that is
+    // triggered when a user's document is deleted from Firestore. This function
+    // would then use the Firebase Admin SDK to safely delete the corresponding
+    // user from Firebase Authentication.
     const docRef = doc(db, "users", uid);
     await deleteDoc(docRef);
 }
